@@ -1,8 +1,26 @@
 profil métier;domaine de compétence;compétence_id;niveau;niveau_texte
-DATA SCIENTISTE;A. Planifier;A.7 Veille technologique;4;Valide les technologies nouvelles et émergentes, en association avec une compréhension experte de l'activité, pour envisager et formuler des solutions pour le futur. Crée les processus de veille technologique sur l'ensemble de l'organisation.
-DATA SCIENTISTE;A. Planifier;A.9 Innovation;4;Adopte un mode de pensée indépendant et une conscience technologique permettant l'intégration de concepts disparates dans des solutions originales.
+DATA SCIENTISTE;A. Planifier;A.7. Veille technologique;4;Valide les technologies nouvelles et émergentes, en association avec une compréhension experte de l'activité, pour envisager et formuler des solutions pour le futur. Crée les processus de veille technologique sur l'ensemble de l'organisation.
+DATA SCIENTISTE;A. Planifier;A.9. Innovation;4;Adopte un mode de pensée indépendant et une conscience technologique permettant l'intégration de concepts disparates dans des solutions originales.
 DATA SCIENTISTE;D. Faciliter;D.7. Science des données et analyse;4;Interprète les résultats de l'analyse des données. Effectue une analyse correcte de la rentabilité des données. Fournit des informations sur les exigences des organisations en matière de données, planifie, conçoit, développe et recommande de nouvelles sources de données. Crée de nouveaux modèles et algorithmes pour les données qui pilotent la stratégie. Organise, synthétise et traduit les informations pour faciliter la prise de décision.
 DATA SCIENTISTE;D. Faciliter;D.10. Gestion de l'information et de la connaissance;4;Intègre et synthétise les informations provenant de sources internes et externes pour apporter une connaissance utile à l'organisation.
 DATA SCIENTISTE;D. Faciliter;D.11. Identification des besoins;5;Guide et soutient les clients dans leur prise de décisions stratégiques. Aide les clients à envisager de nouvelles solutions TIC, encourage les partenariats et fait des propositions créatrices de valeur ajoutée.
 DATA SCIENTISTE;E. Gérer;E.1. Développement prévisionnel;3;Exploite des aptitudes pour fournir des prévisions à court terme à partir des données du marché et de l'évaluation des capacités de production et de vente de l'organisation.
 DATA SCIENTISTE;E. Gérer;E.6. Gestion de la qualité des TIC;4;Évalue et estime le niveau d'exigence qualité atteint et dirige la mise en œuvre de la politique qualité. Conduit les actions transverses permettant l'élaboration et le dépassement des normes de qualité.
+DATA ANALYSTE;A. Planifier;A.9. Innovation;4;Adopte un mode de pensée indépendant et une conscience technologique permettant l'intégration de concepts disparates dans des solutions originales.
+DATA ANALYSTE;B. Développer;B.1. Conception et développement d'applications;2;Développe et valide les applications de manière systématique.
+DATA ANALYSTE;B. Développer;B.3. Tests;2;Organise des campagnes d'essais et élabore des scripts pour mettre à l'épreuve les vulnérabilités potentielles. Consigne et communique les résultats et leur analyse.
+DATA ANALYSTE;B. Développer;B.5. Production de la documentation;3;Adapte le niveau de détail de manière à répondre aux besoins du public ciblé.
+DATA ANALYSTE;D. Faciliter;D.7. Science des données et analyse;3;
+DATA ANALYSTE;D. Faciliter;D.10. Gestion de l'information et de la connaissance;4;
+DATA ANALYSTE;D. Faciliter;D.11. Identification des besoins;3;
+DATA ANALYSTE;E. Gérer;E.1. Développement prévisionnel;3;
+DATA ANALYSTE;E. Gérer;E.4. Gestion de la relation client;3;
+CHIEF DATA OFFICER;A. Planifier;A.1. Systèmes d’information et alignement stratégique métier;5;
+CHIEF DATA OFFICER;A. Planifier;A.9. Innovation;5;
+CHIEF DATA OFFICER;D. Faciliter;D.1. Développement d'une stratégie de sécurité de l'information;4;
+CHIEF DATA OFFICER;D. Faciliter;D.2. Développement d'une stratégie pour la qualité des TIC;5;
+CHIEF DATA OFFICER;D. Faciliter;D.10. Gestion de l'information et de la connaissance;5;
+CHIEF DATA OFFICER;E. Gérer;E.1. Développement prévisionnel;4;
+CHIEF DATA OFFICER;E. Gérer;E.4. Gestion de la relation client;4;
+CHIEF DATA OFFICER;E. Gérer;E.7. Gestion des changements métier;5;
+CHIEF DATA OFFICER;E. Gérer;E.9. Gouvernance des systèmes d'information;5;
