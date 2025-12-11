@@ -1,17 +1,20 @@
 <mxfile host="65bd71144e">
     <diagram name="Page-1" id="5G_jHLi90DZ9EL8zw4AZ">
-        <mxGraphModel dx="2205" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+        <mxGraphModel dx="2160" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-18" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
                     <mxGeometry x="-720" y="110" width="660" height="310" as="geometry"/>
                 </mxCell>
+                <mxCell id="4" value="POST" style="whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+                    <mxGeometry x="-765" y="125" width="60" height="190" as="geometry"/>
+                </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="hA2ITbfias4bhCYic_YJ-1" target="hA2ITbfias4bhCYic_YJ-25" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="-750" y="265"/>
-                            <mxPoint x="-750" y="340"/>
+                            <mxPoint x="-730" y="265"/>
+                            <mxPoint x="-730" y="250"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -25,7 +28,12 @@
                     <mxGeometry x="-1110" y="190" width="30" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="hA2ITbfias4bhCYic_YJ-4" target="hA2ITbfias4bhCYic_YJ-19" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="-740" y="170"/>
+                            <mxPoint x="-740" y="160"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-4" value="&lt;b&gt;Question libre:&lt;/b&gt;&lt;br&gt;décrivez vos compétences de manière libre." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
                     <mxGeometry x="-1010" y="140" width="200" height="60" as="geometry"/>
@@ -48,7 +56,7 @@
                 <mxCell id="hA2ITbfias4bhCYic_YJ-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="hA2ITbfias4bhCYic_YJ-11" target="hA2ITbfias4bhCYic_YJ-13" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="hA2ITbfias4bhCYic_YJ-11" value="&lt;div&gt;&lt;b&gt;Jeux de donnée&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Modèle de donnée : Métier - N Bloc de compétences - N compétence.&lt;br&gt;&lt;br&gt;Pondération : certaines compétences sont plus importantes que d&#39;autres, certains blocs sont plus importants que d&#39;autres.&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;chaque compétence doit être une phrase. &lt;b&gt;Concaténer le titre et la description&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+                <mxCell id="hA2ITbfias4bhCYic_YJ-11" value="&lt;div&gt;&lt;b&gt;Jeux de donnée&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Modèle de donnée : Métier - N Bloc de compétences - M compétence.&lt;br&gt;&lt;br&gt;Pondération : certaines compétences sont plus importantes que d&#39;autres, certains blocs sont plus importants que d&#39;autres.&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;chaque compétence doit être une phrase. &lt;b&gt;Concaténer le titre et la description&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
                     <mxGeometry x="-1045" y="454" width="270" height="172" as="geometry"/>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="hA2ITbfias4bhCYic_YJ-13" target="hA2ITbfias4bhCYic_YJ-14" edge="1">
@@ -92,7 +100,7 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-25" value="calcul score numérique" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="-690" y="330" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="-690" y="220" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="hA2ITbfias4bhCYic_YJ-27" target="hA2ITbfias4bhCYic_YJ-37" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
@@ -130,8 +138,11 @@
                 <mxCell id="hA2ITbfias4bhCYic_YJ-40" value="caching" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" parent="1" vertex="1">
                     <mxGeometry x="-200" y="470" width="170" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="2" value="Optionnel : augmenter l&#39;entrée utilisateur" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-                    <mxGeometry x="-1070" y="660" width="270" height="30" as="geometry"/>
+                <mxCell id="2" value="Optionnel : augmenter l&#39;entrée utilisateur" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="-1050" y="660" width="270" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="https://docs.trychroma.com/docs/embeddings/embedding-functions#custom-embedding-functions" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="-1020" y="740" width="540" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
