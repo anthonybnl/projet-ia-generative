@@ -1,0 +1,6 @@
+{
+    "question1": "libre",
+    "question2": "libre",
+    "question3": "libre",
+    "question4" : { "type" : "oui/partiellement/non", "compétences" : [""]}
+}
