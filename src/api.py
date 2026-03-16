@@ -16,7 +16,11 @@ load_dotenv()
 CHROMA_HOST = os.environ.get("CHROMA_HOST")
 CHROMA_PORT = os.environ.get("CHROMA_PORT")
 chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
-collection = chroma_client.get_collection("competences")
+
+try:
+    collection = chroma_client.get_collection("competences")
+except:
+    raise Exception("La base de données ChromaDB n'est pas encore initialisée.")
 
 # sbert
 
@@ -60,9 +64,9 @@ competence_defaut = "j'analyse des données en utilisant des techniques comme l'
 async def test_sbert(
     query: str = Query(competence_defaut, description="Nombre de résultats par page"),
 ):
-    embeddings: numpy.ndarray = transformer.encode(query)
+    embeddings = transformer.encode(query)
 
-    res = collection.query(query_embeddings=embeddings, n_results=3)
+    res = collection.query(query_embeddings=embeddings.numpy(), n_results=5)
 
     array_result = []
 

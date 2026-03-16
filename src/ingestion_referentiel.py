@@ -32,7 +32,7 @@ def initialiser_bdd(chroma_client: ClientAPI):
     # préparation des données
 
     df_competence = pd.read_csv(
-        os.path.join(os.getcwd(), "data", "cigref_competence.csv"),
+        os.path.join(os.getcwd(), "data", "cigref_competence_clean.csv"),
         sep=",",
         lineterminator="\n",
     )

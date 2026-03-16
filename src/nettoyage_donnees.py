@@ -33,7 +33,7 @@ df_competence_clean = df_competence[
 ]
 
 df_competence_clean.to_csv(
-    os.path.join(os.getcwd(), "data", "cigref_competence.csv"),
+    os.path.join(os.getcwd(), "data", "cigref_competence_clean.csv"),
     sep=",",
     lineterminator="\n",
     index=False,
@@ -43,12 +43,12 @@ df_metier = df_metier.merge(
     df_competence, how="left", left_on="compétence_id", right_on="compétence_id"
 )
 
-df_metier_clean = df_metier[["profil métier", "domaine de compétence", "id"]].rename(
+df_metier_clean = df_metier[["profil métier", "domaine de compétence", "id", "niveau"]].rename(
     columns={"profil métier": "métier", "id": "id_competence"}
 )
 
 df_metier_clean.to_csv(
-    os.path.join(os.getcwd(), "data", "cigref_metier.csv"),
+    os.path.join(os.getcwd(), "data", "cigref_metier_clean.csv"),
     sep=",",
     lineterminator="\n",
     index=False,
