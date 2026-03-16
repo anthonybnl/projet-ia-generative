@@ -7,6 +7,8 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 
 SBERT_CACHE_FOLDER = os.path.join(os.getcwd(), "models")
+SBERT_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
+# SBERT_MODEL = "all-MiniLM-L6-v2"
 
 
 def get_collection_if_exists(chroma_client: ClientAPI) -> chromadb.Collection:
@@ -49,12 +51,12 @@ def initialiser_bdd(chroma_client: ClientAPI):
     print("chargement du modèle SBERT ...")
 
     transformer = SentenceTransformer(
-        "all-MiniLM-L6-v2", cache_folder=SBERT_CACHE_FOLDER
+        SBERT_MODEL, cache_folder=SBERT_CACHE_FOLDER
     )
 
     # calcul des embeddings
 
-    embeddings: numpy.ndarray = transformer.encode(df_competence["texte_competence"])
+    embeddings: numpy.ndarray = transformer.encode(df_competence["texte_competence"].to_numpy())
 
     print(f"shape des embeddings : {embeddings.shape}")
 
