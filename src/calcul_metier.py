@@ -27,18 +27,31 @@ def calcul_score_competence(
 
 
 def trouver_metier(
-    df_metier: pd.DataFrame, score_par_competence: dict[str, float]
+    df_metier: pd.DataFrame,
+    df_competences: pd.DataFrame,
+    score_par_competence: dict[str, float],
 ) -> list[dict]:
 
     # on regroupe par métier
 
+    df_metier_competences = df_metier.merge(
+        df_competences[["id", "titre", "compétence"]],
+        left_on="id_competence",
+        right_on="id",
+        how="inner",
+    )
+
+    print(df_metier_competences.info())
+
     metiers: dict[str, list[dict]] = {}
 
-    for index, row in df_metier.iterrows():
+    for index, row in df_metier_competences.iterrows():
         metier = row["métier"]
         domaine = row["domaine de compétence"]
         id_competence = row["id_competence"]
         niveau = row["niveau"]
+        titre_competence = row["titre"]
+        detail_competence = row["compétence"]
 
         if not metier in metiers:
             metiers[metier] = []
@@ -48,6 +61,8 @@ def trouver_metier(
                 "id_competence": id_competence,
                 "niveau": niveau,
                 "domaine": domaine,
+                "tittre": titre_competence,
+                "compétence": detail_competence,
             }
         )
 
@@ -65,6 +80,8 @@ def trouver_metier(
             id_competence = competence["id_competence"]
             niveau = competence["niveau"]
             domaine = competence["domaine"]
+            titre_competence = competence["tittre"]
+            detail_competence = competence["compétence"]
 
             score = score_par_competence.get(id_competence, 0)
 
@@ -74,9 +91,11 @@ def trouver_metier(
             resultat_metier["compétences"].append(
                 {
                     "id_competence": id_competence,
+                    "titre": titre_competence,
+                    "detail": detail_competence,
+                    "domaine": domaine,
                     "niveau_requis": niveau,
                     "score_competence": score,
-                    "domaine": domaine,
                 }
             )
 
@@ -104,5 +123,5 @@ def trouver_metier(
 
     # top 3 des métiers
     resultats = resultats[:3]
-    
+
     return resultats
