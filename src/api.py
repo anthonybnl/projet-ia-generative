@@ -41,7 +41,7 @@ df_metier = pd.read_csv(str(DATA_FOLDER / "cigref_metier_clean.csv"))
 
 # api
 
-SEUIL_SIMILARITE = 0.25
+SEUIL_SIMILARITE = 0.20
 
 @app.get("/data/")
 async def get_data():
@@ -159,7 +159,7 @@ async def calculer_score_metier(
 
     res = calcul_score_competence(df_metier, df_competences, all_results)
 
-    metiers = trouver_metier(df_metier, res)
+    metiers = trouver_metier(df_metier, df_competences, res)
 
     return {
         "raw": all_results,
