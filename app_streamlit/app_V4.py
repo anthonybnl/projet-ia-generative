@@ -1,3 +1,4 @@
+import requests
 import streamlit as st
 import os
 import json
@@ -191,9 +192,9 @@ def auto_eval_competences():
             )
             results["data"] = {
                 "not_concerned": False,
-                "D_7": D_7,
-                "A_5": A_5,
-                "D_1": D_1,
+                "D.7": D_7,
+                "A.5": A_5,
+                "D.1": D_1,
             }
         else:
             results["data"] = {"not_concerned": True}
@@ -220,9 +221,9 @@ def auto_eval_competences():
             )
             results["management_projets"] = {
                 "not_concerned": False,
-                "D_11": D_11,
-                "E_2": E_2,
-                "A_10": A_10,
+                "D.11": D_11,
+                "E.2": E_2,
+                "A.10": A_10,
             }
         else:
             results["management_projets"] = {"not_concerned": True}
@@ -254,9 +255,9 @@ def auto_eval_competences():
             )
             results["cycle_applications"] = {
                 "not_concerned": False,
-                "B_1": B_1,
-                "B_2": B_2,
-                "B_4": B_4,
+                "B.1": B_1,
+                "B.2": B_2,
+                "B.4": B_4,
             }
         else:
             results["cycle_applications"] = {"not_concerned": True}
@@ -305,6 +306,15 @@ def main():
         # 5) (optionnel) Affichage debug
         st.markdown("### Aperçu des données sauvegardées (debug)")
         st.json(json_data)
+
+        # appel d'api pour POST le JSON
+        print("appel de l'API ...")
+        response = requests.post("http://localhost:8000/recommender_metier/", json=json_data)
+        if response.status_code == 200:
+            st.success("Réponse reçue de l'API ! ✅")
+            st.json(response.json())
+        else:
+            st.error(f"Erreur lors de l'appel de l'API : {response.status_code}")
 
 
 if __name__ == "__main__":
