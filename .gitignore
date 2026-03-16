@@ -3,3 +3,7 @@ __pycache__/
 
 chroma-data/*
 models/*
+
+data/responses
+app_streamlit/models
+app_streamlit/data/responses
