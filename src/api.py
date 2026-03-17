@@ -1,7 +1,7 @@
 import os
 import chromadb
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query
+from fastapi import Body, FastAPI, Query
 import numpy
 import pandas as pd
 from sentence_transformers import SentenceTransformer
@@ -30,7 +30,9 @@ except:
 SBERT_CACHE_FOLDER = os.path.join(os.getcwd(), "models")
 print("chargement SBERT ...")
 # transformer = SentenceTransformer("all-MiniLM-L6-v2", cache_folder=SBERT_CACHE_FOLDER)
-transformer = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2", cache_folder=SBERT_CACHE_FOLDER)
+transformer = SentenceTransformer(
+    "paraphrase-multilingual-MiniLM-L12-v2", cache_folder=SBERT_CACHE_FOLDER
+)
 
 # référentiel
 
@@ -41,7 +43,9 @@ df_metier = pd.read_csv(str(DATA_FOLDER / "cigref_metier_clean.csv"))
 
 # api
 
-SEUIL_SIMILARITE = 0.20
+# TODO : à mettre dans un fichier de config ou une variable d'environnement
+SEUIL_SIMILARITE = 0.35
+
 
 @app.get("/data/")
 async def get_data():
@@ -114,7 +118,7 @@ async def calculer_score_metier(
     query1: str = Query("exploration des données"),
     query2: str = Query(""),
 ):
-    
+
     all_queries = []
     for query in [query1, query2]:
         query = query.strip()
@@ -165,4 +169,107 @@ async def calculer_score_metier(
         "raw": all_results,
         "score_competence": res,
         "metiers": metiers,
+    }
+
+
+def calculer_embeddings(queries) -> list[dict[str, float]]:
+    embeddings = transformer.encode(queries)  # on encode les deux compétences à tester
+
+    # return embeddings.shape
+
+    res = collection.query(
+        query_embeddings=embeddings, n_results=100
+    )  # on calcule pour l'ensemble des compétences
+
+    all_results = []
+
+    for query_number in range(len(queries)):
+        print(f"Résultats pour la requête : {queries[query_number]}")
+        dict_all_score = {}
+
+        for ix, id in enumerate(res.get("ids")[query_number]):
+            distance = res.get("distances")[query_number][ix]
+            cosine_sim = (
+                1.0 - distance
+            )  # voir la doc de ChromaDB : distance = 1.0 - cosine_sim
+
+            # on ne tient compte du score que si on a au moins SEUIL_SIMILARITE.
+            if cosine_sim >= SEUIL_SIMILARITE:
+                dict_all_score[id] = cosine_sim
+
+        all_results.append(dict_all_score)
+
+    return all_results
+
+
+@app.post("/recommender_metier/")
+async def recommender_metier(json_data: dict = Body()):
+
+    # partie questions libre
+
+    queries_questions_libres = []
+
+    questions_libres: dict = json_data.get("description_libre")
+    for key in questions_libres:
+        queries_questions_libres.append(questions_libres[key].strip().lower())
+
+    # TODO : nettoyage des questions libres
+    embeddings_questions_libre = calculer_embeddings(queries_questions_libres)
+
+    # partie questions guidées
+
+    queries_questions_guidees = []
+
+    questions_guidees: dict = json_data.get("questions_guidees")
+
+    for key in questions_guidees:
+        not_concerned = questions_guidees[key].get("etat").lower()
+        if not_concerned == "oui" or not_concerned == "partiellement":
+            queries_questions_guidees.append(
+                questions_guidees[key].get("description").strip().lower()
+            )
+
+    embeddings_questions_guidees = calculer_embeddings(queries_questions_guidees)
+
+    # partie auto évaluation
+
+    score_competence = {}
+
+    list_id_competences = df_competences[
+        "id"
+    ].tolist()  # liste des id de compétences du référentiel.
+
+    auto_eval: dict = json_data.get("auto_evaluation")
+
+    for key in auto_eval:
+        not_concerned = auto_eval[key].get("not_concerned")
+        if not_concerned == False:
+            for competence in auto_eval[key]:
+                if competence != "not_concerned":
+                    if competence not in list_id_competences:
+                        print(
+                            f"compétence {competence} non trouvée dans le référentiel"
+                        )
+                    else:
+                        # TODO : fichier de config pour le 0.8
+                        score_competence[competence] = (
+                            auto_eval[key].get(competence) / 5.0
+                        ) * 0.8  # coefficient de 0.8 pour les auto évaluations
+
+    inputs: list[dict[str, float]] = []
+    inputs += embeddings_questions_libre
+    inputs += embeddings_questions_guidees
+    inputs.append(score_competence)
+
+    final_score_competences = calcul_score_competence(
+        df_metier,
+        df_competences,
+        inputs,
+    )
+
+    metiers = trouver_metier(df_metier, df_competences, final_score_competences)
+
+    return {
+        "metiers": metiers,
+        "compétences": final_score_competences,
     }

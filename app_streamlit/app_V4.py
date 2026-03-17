@@ -1,9 +1,61 @@
+import requests
 import streamlit as st
 import os
 import json
 import uuid
+import datetime as dt
 
-from embedding_calculations import build_JSON
+def build_JSON(auto_eval_results):
+    """
+    Construit un dictionnaire avec :
+    - profil général
+    - description libre
+    - questions guidées
+    - auto-évaluation
+    - texte global utilisateur (user_text)
+    - embedding SBERT du texte utilisateur
+    """
+
+    # 1) Textes libres (section 2)
+    desc_comp = st.session_state.get("desc_competences", "").strip()
+    desc_proj = st.session_state.get("desc_projets", "").strip()
+    desc_outils = st.session_state.get("desc_outils", "").strip()
+
+    description_libre = {
+        "competences": desc_comp,
+        "projets": desc_proj,
+        "outils": desc_outils,
+    }
+
+    # 3) Questions guidées (section 3)
+    blocks = ["data", "cycle_applications", "management_projets"]
+    questions_guidees = {}
+
+    for base in blocks:
+        radio_key = f"{base}_radio"
+        input_key = f"{base}_input"
+
+        choix = st.session_state.get(radio_key, None)      # Oui / partiellement / Non
+        texte = st.session_state.get(input_key, "").strip()
+
+        questions_guidees[base] = {
+            "etat": choix,
+            "description": texte if choix in ("Oui", "partiellement") else ""
+        }
+
+    # 4) Auto-évaluation (section 4)
+    auto_eval = auto_eval_results
+
+    # 5) Construction du payload de base
+    payload = {
+        "id_reponse": uuid.uuid4().hex,
+        "timestamp": dt.datetime.now().isoformat(),
+        "description_libre": description_libre,
+        "questions_guidees": questions_guidees,
+        "auto_evaluation": auto_eval,
+    }
+
+    return payload
 
 st.set_page_config(page_title="Cartographie des compétences")
 
@@ -67,7 +119,7 @@ col_1, col_2 = st.columns(2)
 with col_1:
     radio_with_conditional_input(
         "Avez-vous déjà travaillé sur l’un des volets suivants liés aux applications : la conception, le développement, l’intégration, les tests, le déploiement, le paramétrage ou le support d’une application ou d’une solution logicielle ?",
-        base_key="systeme",
+        base_key="cycle_applications",
         label_input="Si oui / partiellement, décrivez votre rôle.",
         placeholder="Ex : J'ai contribué à... en utilisant ..."
     )
@@ -75,7 +127,7 @@ with col_1:
 with col_2:
     radio_with_conditional_input(
         "Avez-vous déjà travaillé sur l’un des volets suivants liés aux données : la gestion, l’exploitation, la gouvernance, la sécurisation, l’architecture ou la valorisation des données au sein d’une organisation ?",
-        base_key="donnees",
+        base_key="data",
         label_input="Si oui / partiellement, comment ?",
         placeholder="Ex : J'ai contribué à... en utilisant ..."
     )
@@ -85,7 +137,7 @@ col_1_, col_2_ = st.columns(2)
 with col_1_:
     radio_with_conditional_input(
         "Avez-vous déjà travaillé sur l’un des volets suivants liés au pilotage de projets ou de produits : la coordination, la planification, la priorisation, l’accompagnement des équipes, l’analyse des besoins ou la gestion de transformations au sein d’une organisation ?",
-        base_key="deploiement",
+        base_key="management_projets",
         label_input="Si oui / partiellement, décrivez vos actions concrètes.",
         placeholder="Ex : J'ai contribué à... en utilisant ..."
     )
@@ -140,9 +192,9 @@ def auto_eval_competences():
             )
             results["data"] = {
                 "not_concerned": False,
-                "D_7": D_7,
-                "A_5": A_5,
-                "D_1": D_1,
+                "D.7": D_7,
+                "A.5": A_5,
+                "D.1": D_1,
             }
         else:
             results["data"] = {"not_concerned": True}
@@ -169,9 +221,9 @@ def auto_eval_competences():
             )
             results["management_projets"] = {
                 "not_concerned": False,
-                "D_11": D_11,
-                "E_2": E_2,
-                "A_10": A_10,
+                "D.11": D_11,
+                "E.2": E_2,
+                "A.10": A_10,
             }
         else:
             results["management_projets"] = {"not_concerned": True}
@@ -203,9 +255,9 @@ def auto_eval_competences():
             )
             results["cycle_applications"] = {
                 "not_concerned": False,
-                "B_1": B_1,
-                "B_2": B_2,
-                "B_4": B_4,
+                "B.1": B_1,
+                "B.2": B_2,
+                "B.4": B_4,
             }
         else:
             results["cycle_applications"] = {"not_concerned": True}
@@ -254,6 +306,15 @@ def main():
         # 5) (optionnel) Affichage debug
         st.markdown("### Aperçu des données sauvegardées (debug)")
         st.json(json_data)
+
+        # appel d'api pour POST le JSON
+        print("appel de l'API ...")
+        response = requests.post("http://localhost:8000/recommender_metier/", json=json_data)
+        if response.status_code == 200:
+            st.success("Réponse reçue de l'API ! ✅")
+            st.json(response.json())
+        else:
+            st.error(f"Erreur lors de l'appel de l'API : {response.status_code}")
 
 
 if __name__ == "__main__":
