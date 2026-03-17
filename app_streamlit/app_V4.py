@@ -31,7 +31,7 @@ def radio_with_conditional_input(label_radio, base_key, label_input, placeholder
     return choice, st.session_state.get(input_key, "")
 
 
-def build_JSON(auto_eval_results):
+def build_JSON():
     """
     Construit un dictionnaire avec :
     - profil général
@@ -70,7 +70,38 @@ def build_JSON(auto_eval_results):
         }
 
     # Auto-évaluation (section 4)
-    auto_eval = auto_eval_results
+    auto_eval : dict = {
+        "data": {"not_concerned": True},
+        "management_projets": {"not_concerned": True},
+        "cycle_applications": {"not_concerned": True},
+    }
+
+    nc_data = st.session_state.get("nc_data")
+    if nc_data == False:
+        auto_eval["data"] = {
+            "not_concerned": False,
+            "D.7": st.session_state.get("D.7", 0),
+            "A.5": st.session_state.get("A.5", 0),
+            "D.1": st.session_state.get("D.1", 0),
+        }
+
+    nc_proj = st.session_state.get("nc_proj")
+    if nc_proj == False:
+        auto_eval["management_projets"] = {
+            "not_concerned": False,
+            "D.11": st.session_state.get("D.11"),
+            "E.2": st.session_state.get("E.2"),
+            "A.10": st.session_state.get("A.10"),
+        }
+
+    nc_apps = st.session_state.get("nc_apps")
+    if nc_apps == False:
+        auto_eval["cycle_applications"] = {
+            "not_concerned": False,
+            "B.1": st.session_state.get("B.1"),
+            "B.2": st.session_state.get("B.2"),
+            "B.4": st.session_state.get("B.4"),
+        }
 
     # Construction du payload de base
     payload = {
@@ -82,6 +113,7 @@ def build_JSON(auto_eval_results):
     }
 
     return payload
+
 
 def part1_description_libre():
     st.header("1. Description libre de vos compétences")
@@ -106,6 +138,7 @@ def part1_description_libre():
     )
 
     st.divider()
+
 
 def part2_questions_guidees():
     st.header("2. Éléments de compétence (professionnels ou académiques)")
@@ -148,6 +181,7 @@ def part2_questions_guidees():
 
     st.divider()
 
+
 def part3_auto_eval_competences():
     st.header("3. Auto-évaluation de vos compétences SI")
 
@@ -159,8 +193,6 @@ def part3_auto_eval_competences():
     """
     )
 
-    results = {}
-
     # ====== LIGNE 1 : DATA + MANAGEMENT PROJETS ======
     col1, col2 = st.columns(2)
 
@@ -171,23 +203,15 @@ def part3_auto_eval_competences():
             "Je ne suis pas concerné par ce domaine (Data)", key="nc_data"
         )
         if not data_not_concerned:
-            D_7 = st.slider("Science des données et analyse", 0, 5, 0, key="D.7")
-            A_5 = st.slider("Conception de l'architecture", 0, 5, 0, key="A.5")
-            D_1 = st.slider(
+            st.slider("Science des données et analyse", 0, 5, 0, key="D.7")
+            st.slider("Conception de l'architecture", 0, 5, 0, key="A.5")
+            st.slider(
                 "Développement d'une stratégie de sécurité de l'information",
                 0,
                 5,
                 0,
                 key="D.1",
             )
-            results["data"] = {
-                "not_concerned": False,
-                "D.7": D_7,
-                "A.5": A_5,
-                "D.1": D_1,
-            }
-        else:
-            results["data"] = {"not_concerned": True}
 
     # 2. Management de projets
     with col2:
@@ -197,23 +221,15 @@ def part3_auto_eval_competences():
             key="nc_proj",
         )
         if not proj_not_concerned:
-            D_11 = st.slider("Identification des besoins", 0, 5, 0, key="proj_pilotage")
-            E_2 = st.slider(
+            st.slider("Identification des besoins", 0, 5, 0, key="D.11")
+            st.slider(
                 "Gestion des projets et du portefeuille de projets",
                 0,
                 5,
                 0,
-                key="proj_cadrage",
+                key="E.2",
             )
-            A_10 = st.slider("Expérience utilisateur", 0, 5, 0, key="proj_agile")
-            results["management_projets"] = {
-                "not_concerned": False,
-                "D.11": D_11,
-                "E.2": E_2,
-                "A.10": A_10,
-            }
-        else:
-            results["management_projets"] = {"not_concerned": True}
+            st.slider("Expérience utilisateur", 0, 5, 0, key="A.10")
 
     # st.markdown("---")
 
@@ -228,29 +244,19 @@ def part3_auto_eval_competences():
             key="nc_apps",
         )
         if not apps_not_concerned:
-            B_1 = st.slider(
-                "Conception et développement d'applications", 0, 5, 0, key="apps_dev"
+            st.slider(
+                "Conception et développement d'applications", 0, 5, 0, key="B.1"
             )
-            B_2 = st.slider("Intégration des composants", 0, 5, 0, key="apps_tests")
-            B_4 = st.slider(
-                "Déploiement de la solution", 0, 5, 0, key="apps_integration"
+            st.slider("Intégration des composants", 0, 5, 0, key="B.2")
+            st.slider(
+                "Déploiement de la solution", 0, 5, 0, key="B.4"
             )
-            results["cycle_applications"] = {
-                "not_concerned": False,
-                "B.1": B_1,
-                "B.2": B_2,
-                "B.4": B_4,
-            }
-        else:
-            results["cycle_applications"] = {"not_concerned": True}
 
-    return results
-
-def on_submit(results_auto_eval: dict):
+def on_submit():
     st.success("Le questionnaire a été soumis à AICC ! ✅")
 
     # génération du JSON et sauvegarde locale
-    json_data = build_JSON(results_auto_eval)
+    json_data = build_JSON()
 
     os.makedirs("data/responses", exist_ok=True)
     filename = f"data/responses/{int(time.time())}.json"
@@ -266,7 +272,7 @@ def on_submit(results_auto_eval: dict):
     # st.json(json_data)
 
     # appel d'api pour POST le JSON
-    
+
     response = requests.post(
         "http://localhost:8000/recommender_metier/", json=json_data
     )
@@ -285,6 +291,7 @@ def on_submit(results_auto_eval: dict):
     else:
         st.error(f"Erreur lors de l'appel de l'API : {response.status_code}")
 
+
 def main():
     st.set_page_config(page_title="Cartographie des compétences", layout="wide")
 
@@ -294,19 +301,16 @@ def main():
     )
     st.divider()
 
-    part1_description_libre()    
-
+    part1_description_libre()
     part2_questions_guidees()
-
-    auto_eval = part3_auto_eval_competences()
-    st.divider()
+    part3_auto_eval_competences()
 
     # --- 5. Soumission ---
     st.header("5. Soumission du questionnaire")
     Soumettre = st.button("Soumettre le questionnaire à AICC")
 
     if Soumettre:
-        on_submit(auto_eval)
+        on_submit()
 
 
 if __name__ == "__main__":
