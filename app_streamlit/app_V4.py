@@ -1,11 +1,12 @@
 import time
-
 import requests
 import streamlit as st
 import os
 import json
 import uuid
 import datetime as dt
+import pandas as pd
+import plotly.graph_objects as go
 
 
 def radio_with_conditional_input(label_radio, base_key, label_input, placeholder):
@@ -183,6 +184,53 @@ def auto_eval_competences():
     return results
 
 
+def graphiques_tous_metiers(metiers: dict):
+    sorted_metiers = sorted(metiers, key=lambda x: x["score"], reverse=True)[:5]
+    labels = [m["metier"] for m in reversed(sorted_metiers)]
+    scores = [m["score"] for m in reversed(sorted_metiers)]
+
+    score_min = min(scores)
+    score_max = max(scores)
+    margin = (score_max - score_min) * 0.15 or 0.005
+
+    fig = go.Figure(go.Bar(
+        x=scores,
+        y=labels,
+        orientation="h",
+        marker=dict(
+            color=scores,
+            colorscale="RdYlGn",
+            cmin=score_min - margin,
+            cmax=score_max + margin,
+            showscale=True,
+            colorbar=dict(title="Score", tickformat=".3f"),
+        ),
+        text=[f"{s:.4f}" for s in scores],
+        textposition="outside",
+        cliponaxis=False,
+    ))
+
+    fig.update_layout(
+        title=dict(text="Top 10 métiers recommandés", font=dict(size=18)),
+        xaxis=dict(
+            title="Score de similarité",
+            range=[score_min - margin, score_max + margin * 4],
+            tickformat=".3f",
+        ),
+        yaxis=dict(tickfont=dict(size=12)),
+        height=480,
+        margin=dict(l=20, r=20, t=60, b=40),
+        plot_bgcolor="white",
+    )
+    fig.update_xaxes(showgrid=True, gridcolor="#eeeeee")
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def graphiques_metiers(metiers: dict):
+    graphiques_tous_metiers(metiers)
+
+
 def main():
     st.set_page_config(page_title="Cartographie des compétences")
 
@@ -289,7 +337,16 @@ def main():
         )
         if response.status_code == 200:
             st.success("Réponse reçue de l'API ! ✅")
-            st.json(response.json())
+
+            data = response.json()
+
+            metiers = data.get("metiers")
+
+            graphiques_metiers(metiers)
+
+            st.divider()
+
+            st.json(data)
         else:
             st.error(f"Erreur lors de l'appel de l'API : {response.status_code}")
 
