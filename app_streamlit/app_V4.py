@@ -184,7 +184,7 @@ def auto_eval_competences():
     return results
 
 
-def graphiques_tous_metiers(metiers: dict):
+def graphiques_tous_metiers(metiers: list[dict]):
     sorted_metiers = sorted(metiers, key=lambda x: x["score"], reverse=True)[:5]
     labels = [m["metier"] for m in reversed(sorted_metiers)]
     scores = [m["score"] for m in reversed(sorted_metiers)]
@@ -193,22 +193,24 @@ def graphiques_tous_metiers(metiers: dict):
     score_max = max(scores)
     margin = (score_max - score_min) * 0.15 or 0.005
 
-    fig = go.Figure(go.Bar(
-        x=scores,
-        y=labels,
-        orientation="h",
-        marker=dict(
-            color=scores,
-            colorscale="RdYlGn",
-            cmin=score_min - margin,
-            cmax=score_max + margin,
-            showscale=True,
-            colorbar=dict(title="Score", tickformat=".3f"),
-        ),
-        text=[f"{s:.4f}" for s in scores],
-        textposition="outside",
-        cliponaxis=False,
-    ))
+    fig = go.Figure(
+        go.Bar(
+            x=scores,
+            y=labels,
+            orientation="h",
+            marker=dict(
+                color=scores,
+                colorscale="RdYlGn",
+                cmin=score_min - margin,
+                cmax=score_max + margin,
+                showscale=True,
+                colorbar=dict(title="Score", tickformat=".3f"),
+            ),
+            text=[f"{s:.4f}" for s in scores],
+            textposition="outside",
+            cliponaxis=False,
+        )
+    )
 
     fig.update_layout(
         title=dict(text="Top 10 métiers recommandés", font=dict(size=18)),
@@ -224,15 +226,202 @@ def graphiques_tous_metiers(metiers: dict):
     )
     fig.update_xaxes(showgrid=True, gridcolor="#eeeeee")
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
-def graphiques_metiers(metiers: dict):
+_MEDALS = ["🥇", "🥈", "🥉"]
+_COLORS = ["#F5A623", "#9B9B9B", "#C87941"]
+_CARD_BG = ["#fffdf0", "#f6f6f6", "#fdf6ef"]
+_GAUGE_COLORS = ["#F5A623", "#9B9B9B", "#C87941"]
+
+
+def affichage_metier(metier_data: dict, rank: int):
+    """Affiche un métier sur 3 lignes : card+jauge / blocs / compétences."""
+    nom = metier_data.get("metier", "—")
+    description = metier_data.get("description", "")
+    score_global = metier_data.get("score", 0)
+    score_par_bloc: dict = metier_data.get("score_par_bloc", {})
+    competences: list = metier_data.get("compétences", [])
+
+    medal = _MEDALS[rank] if rank < len(_MEDALS) else f"#{rank + 1}"
+    color = _COLORS[rank % len(_COLORS)]
+    bg = _CARD_BG[rank % len(_CARD_BG)]
+    gauge_color = _GAUGE_COLORS[rank % len(_GAUGE_COLORS)]
+
+    # ── LIGNE 1 : card texte + jauge score global ──────────────────────────
+    col_card, col_gauge = st.columns([3, 2])
+
+    with col_card:
+        st.markdown(
+            f"""
+            <div style="
+                background:{bg};
+                border-left: 6px solid {color};
+                border-radius: 12px;
+                padding: 18px 20px;
+                box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+                height: 100%;
+            ">
+                <h3 style="margin:0 0 6px 0; font-size:1.2rem;">{medal} {nom}</h3>
+                <p style="font-size:0.83rem; color:#555; line-height:1.5; margin:0;">
+                    {description[:320]}{"…" if len(description) > 320 else ""}
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_gauge:
+        gauge_max = 1.0
+        fig_gauge = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=score_global,
+                number=dict(valueformat=".4f", font=dict(size=22, color=gauge_color)),
+                gauge=dict(
+                    axis=dict(
+                        range=[0, gauge_max],
+                        tickformat=".2f",
+                        tickfont=dict(size=9),
+                    ),
+                    bar=dict(color=gauge_color, thickness=0.35),
+                    bgcolor="white",
+                    borderwidth=1,
+                    bordercolor="#cccccc",
+                    steps=[
+                        dict(range=[0, gauge_max * 0.33], color="#fdecea"),
+                        dict(range=[gauge_max * 0.33, gauge_max * 0.66], color="#fff8e1"),
+                        dict(range=[gauge_max * 0.66, gauge_max], color="#e8f5e9"),
+                    ],
+                    threshold=dict(
+                        line=dict(color=gauge_color, width=3),
+                        thickness=0.8,
+                        value=score_global,
+                    ),
+                ),
+                title=dict(text="Score global", font=dict(size=13)),
+            )
+        )
+        fig_gauge.update_layout(
+            height=200,
+            margin=dict(l=20, r=20, t=30, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(fig_gauge, use_container_width=True, key=f"gauge_{rank}")
+
+    # radar blocs + radar compétences
+    col_blocs, col_comp = st.columns(2)
+
+    with col_blocs:
+        if score_par_bloc:
+            blocs = list(score_par_bloc.keys())
+            vals_blocs = list(score_par_bloc.values())
+            val_max_bloc = max(vals_blocs) if max(vals_blocs) > 0 else 1
+
+            r1 = hex(int(color[1:3], 16))[2:].zfill(2)
+            r2 = hex(int(color[3:5], 16))[2:].zfill(2)
+            r3 = hex(int(color[5:7], 16))[2:].zfill(2)
+            fill_color = f"rgba({int(r1,16)},{int(r2,16)},{int(r3,16)},0.25)"
+
+            theta_blocs = blocs + [blocs[0]]
+            r_blocs = vals_blocs + [vals_blocs[0]]
+
+            fig_blocs = go.Figure()
+            fig_blocs.add_trace(go.Scatterpolar(
+                r=r_blocs,
+                theta=theta_blocs,
+                fill="toself",
+                fillcolor=fill_color,
+                line=dict(color=color, width=2.5),
+                marker=dict(size=7, color=color),
+                hovertemplate="<b>%{theta}</b><br>Score : %{r:.4f}<extra></extra>",
+            ))
+            fig_blocs.update_layout(
+                title=dict(text="Maîtrise par bloc de compétences", font=dict(size=13), x=0.5),
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, val_max_bloc * 1.25],
+                        tickformat=".3f",
+                        tickfont=dict(size=8, color="black"),
+                        gridcolor="#dddddd",
+                        linecolor="#dddddd",
+                    ),
+                    angularaxis=dict(
+                        tickfont=dict(size=10, color="black"),
+                        linecolor="#cccccc",
+                    ),
+                    bgcolor="rgba(250,250,250,1)",
+                ),
+                showlegend=False,
+                height=550,
+                margin=dict(l=20, r=20, t=50, b=20),
+                paper_bgcolor="rgba(0,0,0,0)",
+            )
+            st.plotly_chart(fig_blocs, use_container_width=True, key=f"blocs_{rank}")
+
+    with col_comp:
+        if competences:
+            comp_labels = [c.get("titre", "?") for c in competences]
+            comp_scores = [c.get("score_competence", 0) for c in competences]
+
+            val_max_comp = max(comp_scores) if max(comp_scores) > 0 else 1
+
+            theta_comp = comp_labels + [comp_labels[0]]
+            r_comp = comp_scores + [comp_scores[0]]
+
+            fig_comp = go.Figure()
+            fig_comp.add_trace(go.Scatterpolar(
+                r=r_comp,
+                theta=theta_comp,
+                fill="toself",
+                fillcolor="rgba(66,133,244,0.20)",
+                line=dict(color="#4285F4", width=2.5),
+                marker=dict(size=6, color="#4285F4"),
+                hovertemplate="<b>%{theta}</b><br>Score : %{r:.4f}<extra></extra>",
+            ))
+            fig_comp.update_layout(
+                title=dict(text="Maîtrise par compétence", font=dict(size=13), x=0.5),
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, val_max_comp * 1.25],
+                        tickformat=".3f",
+                        tickfont=dict(size=7, color="black"),
+                        gridcolor="#dddddd",
+                        linecolor="#dddddd",
+                    ),
+                    angularaxis=dict(
+                        tickfont=dict(size=9, color="black"),
+                        linecolor="#cccccc",
+                    ),
+                    bgcolor="rgba(250,250,250,1)",
+                ),
+                showlegend=False,
+                height=550,
+                margin=dict(l=20, r=20, t=50, b=20),
+                paper_bgcolor="rgba(0,0,0,0)",
+            )
+            st.plotly_chart(fig_comp, use_container_width=True, key=f"comp_{rank}")
+
+
+def affichage_top3_metier(top3: list):
+    for i, metier_data in enumerate(top3):
+        st.markdown(f"### {_MEDALS[i] if i < len(_MEDALS) else f'#{i+1}'} Rang {i + 1}")
+        affichage_metier(metier_data, rank=i)
+        if i < len(top3) - 1:
+            st.divider()
+
+
+def graphiques_metiers(metiers: list):
     graphiques_tous_metiers(metiers)
+    st.divider()
+    st.markdown("### 🏆 Top 3 des métiers recommandés")
+    affichage_top3_metier(metiers[:3])
 
 
 def main():
-    st.set_page_config(page_title="Cartographie des compétences")
+    st.set_page_config(page_title="Cartographie des compétences", layout="wide")
 
     st.markdown("# 🧠 AICC – Agent Intelligent pour la Cartographie des Compétences")
     st.markdown(
