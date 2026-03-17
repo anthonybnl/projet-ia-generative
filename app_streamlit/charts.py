@@ -52,7 +52,7 @@ def chart_top_metiers(metiers: list[dict]):
         plot_bgcolor="white",
     )
     fig.update_xaxes(showgrid=True, gridcolor="#eeeeee")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _card_header(
@@ -126,7 +126,7 @@ def _card_header(
             margin=dict(l=20, r=20, t=30, b=10),
             paper_bgcolor="rgba(0,0,0,0)",
         )
-        st.plotly_chart(fig_gauge, use_container_width=True, key=f"gauge_{rank}")
+        st.plotly_chart(fig_gauge, width="stretch", key=f"gauge_{rank}")
 
 
 def _card_radars(
@@ -182,7 +182,7 @@ def _card_radars(
                 margin=dict(l=20, r=20, t=50, b=20),
                 paper_bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_blocs, use_container_width=True, key=f"blocs_{rank}")
+            st.plotly_chart(fig_blocs, width="stretch", key=f"blocs_{rank}")
 
     with col_comp:
         if competences:
@@ -223,7 +223,7 @@ def _card_radars(
                 margin=dict(l=20, r=20, t=50, b=20),
                 paper_bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_comp, use_container_width=True, key=f"comp_{rank}")
+            st.plotly_chart(fig_comp, width="stretch", key=f"comp_{rank}")
 
 
 def affichage_metier(metier_data: dict, rank: int):
@@ -323,7 +323,7 @@ def _bilan_chart_gap(rows_sorted: list):
         height=max(350, len(titres) * 32),
         margin=dict(l=20, r=40, t=60, b=40),
     )
-    st.plotly_chart(fig_gap, use_container_width=True, key="bilan_gap_chart")
+    st.plotly_chart(fig_gap, width="stretch", key="bilan_gap_chart")
 
 
 def _bilan_tableau(rows_sorted: list):
@@ -353,7 +353,7 @@ def _bilan_tableau(rows_sorted: list):
     )
     st.dataframe(
         df_bilan.style.map(color_statut, subset=["Statut"]),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -371,7 +371,7 @@ def bilan_competence_metier(metier_data: dict):
         titre = c.get("titre", "?")
         domaine = c.get("domaine", "?")
         score = c.get("score_competence", 0)
-        niveau_norm = c.get("niveau_requis", 1) / 5.0
+        niveau_norm = (c.get("niveau_requis", 1) / 5.0) * 0.8
         gap = max(0, niveau_norm - score)
 
         if score >= SEUIL_ACQUIS:

@@ -42,7 +42,7 @@ def build_JSON(auto_eval_results):
     - embedding SBERT du texte utilisateur
     """
 
-    # 1) Textes libres (section 2)
+    # Textes libres (section 2)
     desc_comp = st.session_state.get("desc_competences", "").strip()
     desc_proj = st.session_state.get("desc_projets", "").strip()
     desc_outils = st.session_state.get("desc_outils", "").strip()
@@ -53,7 +53,7 @@ def build_JSON(auto_eval_results):
         "outils": desc_outils,
     }
 
-    # 3) Questions guidées (section 3)
+    # Questions guidées (section 3)
     blocks = ["data", "cycle_applications", "management_projets"]
     questions_guidees = {}
 
@@ -69,10 +69,10 @@ def build_JSON(auto_eval_results):
             "description": texte if choix in ("Oui", "partiellement") else "",
         }
 
-    # 4) Auto-évaluation (section 4)
+    # Auto-évaluation (section 4)
     auto_eval = auto_eval_results
 
-    # 5) Construction du payload de base
+    # Construction du payload de base
     payload = {
         "id_reponse": uuid.uuid4().hex,
         "timestamp": dt.datetime.now().isoformat(),
@@ -83,6 +83,70 @@ def build_JSON(auto_eval_results):
 
     return payload
 
+def part1_description_libre():
+    st.header("1. Description libre de vos compétences")
+
+    st.text_area(
+        "Décrivez vos compétences, expériences, outils que vous maîtrisez.",
+        key="desc_competences",
+        placeholder="""Activités informatiques que vous savez réaliser : types de projets, responsabilités, tâches effectuées, outils utilisés, environnements techniques, livrables produits... avec des exemples si possible.
+        Ajoutez autant de détails que vous le souhaitez !""",
+    )
+
+    st.text_area(
+        "Parlez d'un ou plusieurs projets que vous avez déjà réalisés (professionnels, études ou personnels) ?",
+        key="desc_projets",
+        placeholder="Taches techniques effectuées, contributions personnelles, résultats obtenus...",
+    )
+
+    st.text_area(
+        "Quels outils, technologies ou langages de programmation avez-vous utilisés ?",
+        key="desc_outils",
+        placeholder="Ex: Python, C++, Excel, Linux, Power BI, etc.",
+    )
+
+    st.divider()
+
+def part2_questions_guidees():
+    st.header("2. Éléments de compétence (professionnels ou académiques)")
+
+    col_1, col_2 = st.columns(2)
+
+    with col_1:
+        radio_with_conditional_input(
+            "Avez-vous déjà travaillé sur l’un des volets suivants liés aux applications : la conception, le développement, l’intégration, les tests, le déploiement, le paramétrage ou le support d’une application ou d’une solution logicielle ?",
+            base_key="cycle_applications",
+            label_input="Si oui / partiellement, décrivez votre rôle.",
+            placeholder="Ex : J'ai contribué à... en utilisant ...",
+        )
+
+    with col_2:
+        radio_with_conditional_input(
+            "Avez-vous déjà travaillé sur l’un des volets suivants liés aux données : la gestion, l’exploitation, la gouvernance, la sécurisation, l’architecture ou la valorisation des données au sein d’une organisation ?",
+            base_key="data",
+            label_input="Si oui / partiellement, comment ?",
+            placeholder="Ex : J'ai contribué à... en utilisant ...",
+        )
+
+    col_1_, col_2_ = st.columns(2)
+
+    with col_1_:
+        radio_with_conditional_input(
+            "Avez-vous déjà travaillé sur l’un des volets suivants liés au pilotage de projets ou de produits : la coordination, la planification, la priorisation, l’accompagnement des équipes, l’analyse des besoins ou la gestion de transformations au sein d’une organisation ?",
+            base_key="management_projets",
+            label_input="Si oui / partiellement, décrivez vos actions concrètes.",
+            placeholder="Ex : J'ai contribué à... en utilisant ...",
+        )
+
+    with col_2_:
+        radio_with_conditional_input(
+            "autre domaine..",
+            base_key="docs",
+            label_input="Si oui / partiellement, décrivez vos actions concrètes.",
+            placeholder="Ex : J'ai contribué à... en utilisant ...",
+        )
+
+    st.divider()
 
 def part3_auto_eval_competences():
     st.header("3. Auto-évaluation de vos compétences SI")
@@ -182,6 +246,44 @@ def part3_auto_eval_competences():
 
     return results
 
+def on_submit(results_auto_eval: dict):
+    st.success("Le questionnaire a été soumis à AICC ! ✅")
+
+    # génération du JSON et sauvegarde locale
+    json_data = build_JSON(results_auto_eval)
+
+    os.makedirs("data/responses", exist_ok=True)
+    filename = f"data/responses/{int(time.time())}.json"
+
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(json_data, f, ensure_ascii=False, indent=2)
+
+    st.info(f"Les éléments textuels ont été sauvegardés dans : `{filename}`")
+
+    # debug
+
+    # st.markdown("### Aperçu des données envoyées à l'API")
+    # st.json(json_data)
+
+    # appel d'api pour POST le JSON
+    
+    response = requests.post(
+        "http://localhost:8000/recommender_metier/", json=json_data
+    )
+    if response.status_code == 200:
+        st.success("Réponse reçue de l'API ! ✅")
+
+        data = response.json()
+
+        metiers = data.get("metiers")
+
+        graphiques_metiers(metiers)
+
+        st.divider()
+
+        st.json(data)
+    else:
+        st.error(f"Erreur lors de l'appel de l'API : {response.status_code}")
 
 def main():
     st.set_page_config(page_title="Cartographie des compétences", layout="wide")
@@ -192,70 +294,10 @@ def main():
     )
     st.divider()
 
-    st.header("1. Description libre de vos compétences")
+    part1_description_libre()    
 
-    st.text_area(
-        "Décrivez vos compétences, expériences, outils que vous maîtrisez.",
-        key="desc_competences",
-        placeholder="""Activités informatiques que vous savez réaliser : types de projets, responsabilités, tâches effectuées, outils utilisés, environnements techniques, livrables produits... avec des exemples si possible.
-        Ajoutez autant de détails que vous le souhaitez !""",
-    )
+    part2_questions_guidees()
 
-    st.text_area(
-        "Parlez d'un ou plusieurs projets que vous avez déjà réalisés (professionnels, études ou personnels) ?",
-        key="desc_projets",
-        placeholder="Taches techniques effectuées, contributions personnelles, résultats obtenus...",
-    )
-
-    st.text_area(
-        "Quels outils, technologies ou langages de programmation avez-vous utilisés ?",
-        key="desc_outils",
-        placeholder="Ex: Python, C++, Excel, Linux, Power BI, etc.",
-    )
-
-    st.divider()
-
-    st.header("2. Éléments de compétence (professionnels ou académiques)")
-
-    col_1, col_2 = st.columns(2)
-
-    with col_1:
-        radio_with_conditional_input(
-            "Avez-vous déjà travaillé sur l’un des volets suivants liés aux applications : la conception, le développement, l’intégration, les tests, le déploiement, le paramétrage ou le support d’une application ou d’une solution logicielle ?",
-            base_key="cycle_applications",
-            label_input="Si oui / partiellement, décrivez votre rôle.",
-            placeholder="Ex : J'ai contribué à... en utilisant ...",
-        )
-
-    with col_2:
-        radio_with_conditional_input(
-            "Avez-vous déjà travaillé sur l’un des volets suivants liés aux données : la gestion, l’exploitation, la gouvernance, la sécurisation, l’architecture ou la valorisation des données au sein d’une organisation ?",
-            base_key="data",
-            label_input="Si oui / partiellement, comment ?",
-            placeholder="Ex : J'ai contribué à... en utilisant ...",
-        )
-
-    col_1_, col_2_ = st.columns(2)
-
-    with col_1_:
-        radio_with_conditional_input(
-            "Avez-vous déjà travaillé sur l’un des volets suivants liés au pilotage de projets ou de produits : la coordination, la planification, la priorisation, l’accompagnement des équipes, l’analyse des besoins ou la gestion de transformations au sein d’une organisation ?",
-            base_key="management_projets",
-            label_input="Si oui / partiellement, décrivez vos actions concrètes.",
-            placeholder="Ex : J'ai contribué à... en utilisant ...",
-        )
-
-    with col_2_:
-        radio_with_conditional_input(
-            "autre domaine..",
-            base_key="docs",
-            label_input="Si oui / partiellement, décrivez vos actions concrètes.",
-            placeholder="Ex : J'ai contribué à... en utilisant ...",
-        )
-
-    st.divider()
-
-    st.divider()
     auto_eval = part3_auto_eval_competences()
     st.divider()
 
@@ -264,43 +306,7 @@ def main():
     Soumettre = st.button("Soumettre le questionnaire à AICC")
 
     if Soumettre:
-        st.success("Le questionnaire a été soumis à AICC ! ✅")
-
-        # génération du JSON et sauvegarde locale
-        json_data = build_JSON(auto_eval)
-
-        os.makedirs("data/responses", exist_ok=True)
-        filename = f"data/responses/{int(time.time())}.json"
-
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=2)
-
-        st.info(f"Les éléments textuels ont été sauvegardés dans : `{filename}`")
-
-        # debug
-
-        # st.markdown("### Aperçu des données envoyées à l'API")
-        # st.json(json_data)
-
-        # appel d'api pour POST le JSON
-        print("appel de l'API ...")
-        response = requests.post(
-            "http://localhost:8000/recommender_metier/", json=json_data
-        )
-        if response.status_code == 200:
-            st.success("Réponse reçue de l'API ! ✅")
-
-            data = response.json()
-
-            metiers = data.get("metiers")
-
-            graphiques_metiers(metiers)
-
-            st.divider()
-
-            st.json(data)
-        else:
-            st.error(f"Erreur lors de l'appel de l'API : {response.status_code}")
+        on_submit(auto_eval)
 
 
 if __name__ == "__main__":
