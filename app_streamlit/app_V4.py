@@ -307,7 +307,7 @@ def main():
 
     # --- 5. Soumission ---
     st.header("5. Soumission du questionnaire")
-    Soumettre = st.button("Soumettre le questionnaire à AICC")
+    Soumettre = st.button("Soumettre le questionnaire à AISCA")
 
     if Soumettre:
         on_submit()
@@ -315,3 +315,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+ 
