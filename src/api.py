@@ -6,6 +6,7 @@ import numpy
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 from src.calcul_metier import agreger_score_competence_tout_ref, trouver_metier
+from src.nettoyage_texte import preprocess_it_text
 from pathlib import Path
 
 app = FastAPI(
@@ -181,7 +182,8 @@ async def recommender_metier(json_data: dict = Body()):
 
     questions_libres: dict = json_data.get("description_libre")
     for key in questions_libres:
-        query = questions_libres[key].strip().lower()
+        raw_text = questions_libres[key]
+        query = preprocess_it_text(raw_text)
         if len(query) > 0:
             queries_questions_libres.append(query)
 
@@ -197,7 +199,8 @@ async def recommender_metier(json_data: dict = Body()):
     for key in questions_guidees:
         not_concerned = questions_guidees[key].get("etat").lower()
         if not_concerned == "oui" or not_concerned == "partiellement":
-            query = questions_guidees[key].get("description").strip().lower()
+            raw_text = questions_guidees[key].get("description")
+            query = preprocess_it_text(raw_text)
             if len(query) > 0:
                 queries_questions_guidees.append(query)
 
@@ -226,7 +229,7 @@ async def recommender_metier(json_data: dict = Body()):
                         # TODO : fichier de config pour le 0.8
                         score_competence[competence] = (
                             auto_eval[key].get(competence) / 5.0
-                        ) * 0.8  # coefficient de 0.8 pour les auto évaluations
+                        ) * 0.6  # coefficient de 0.8 pour les auto évaluations
 
     inputs: list[dict[str, float]] = []
     inputs += embeddings_questions_libre

@@ -6,6 +6,13 @@ import json
 import uuid
 import datetime as dt
 from charts import graphiques_metiers
+import google.generativeai as genai
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+gemini_api_key = os.environ.get("GEMINI_API_KEY", None)
 
 
 def radio_with_conditional_input(label_radio, base_key, label_input, placeholder):
@@ -70,7 +77,7 @@ def build_JSON():
         }
 
     # Auto-évaluation (section 4)
-    auto_eval : dict = {
+    auto_eval: dict = {
         "data": {"not_concerned": True},
         "management_projets": {"not_concerned": True},
         "cycle_applications": {"not_concerned": True},
@@ -244,13 +251,62 @@ def part3_auto_eval_competences():
             key="nc_apps",
         )
         if not apps_not_concerned:
-            st.slider(
-                "Conception et développement d'applications", 0, 5, 0, key="B.1"
-            )
+            st.slider("Conception et développement d'applications", 0, 5, 0, key="B.1")
             st.slider("Intégration des composants", 0, 5, 0, key="B.2")
-            st.slider(
-                "Déploiement de la solution", 0, 5, 0, key="B.4"
+            st.slider("Déploiement de la solution", 0, 5, 0, key="B.4")
+
+
+def appel_llm(json_data, api_results: list[dict]):
+    st.header("✨ Analyse de votre profil par AISCA")
+
+    if not gemini_api_key:
+        st.error("Erreur de configuration : Clé API Gemini introuvable sur le serveur.")
+    else:
+        try:
+            # 2. Configurer Gemini avec la clé API
+            genai.configure(api_key=gemini_api_key)
+
+            # 3. Lire le prompt système
+            with open("app_streamlit/system_prompt.txt", "r", encoding="utf-8") as file:
+                system_prompt = file.read()
+
+            # 4. Configurer le modèle Gemini 2.5 Flash
+            model = genai.GenerativeModel(
+                model_name="gemini-2.5-flash", system_instruction=system_prompt
             )
+
+            # 5. Préparer le contexte utilisateur
+            user_data_str = json.dumps(json_data, ensure_ascii=False, indent=2)
+
+            api_results_str = json.dumps(api_results, ensure_ascii=False, indent=2)
+
+            prompt_utilisateur = f"""
+            Voici le profil renseigné par l'utilisateur :
+            {user_data_str}
+
+            Voici les résultats de notre moteur de recommandation (métiers et scores) :
+            {api_results_str}
+
+            Merci de rédiger la restitution en te basant sur ces informations.
+                            """
+
+            # 6. Appel à l'API en streaming
+            st.write("Génération de l'analyse en cours...")
+
+            response_stream = model.generate_content(prompt_utilisateur, stream=True)
+
+            # 7. Affichage du stream
+            # st.write_stream prend un générateur, on boucle sur les chunks
+            def stream_generator():
+                for chunk in response_stream:
+                    yield chunk.text
+
+            st.write_stream(stream_generator())
+
+        except Exception as e:
+            raise e
+            # st.error(f"Erreur lors de la communication avec Gemini : {e}")
+
 
 def on_submit():
     st.success("Le questionnaire a été soumis à AICC ! ✅")
@@ -287,6 +343,10 @@ def on_submit():
 
         st.divider()
 
+        appel_llm(json_data, data.get("metiers"))
+
+        st.divider()
+
         st.json(data)
     else:
         st.error(f"Erreur lors de l'appel de l'API : {response.status_code}")
@@ -307,7 +367,7 @@ def main():
 
     # --- 5. Soumission ---
     st.header("5. Soumission du questionnaire")
-    Soumettre = st.button("Soumettre le questionnaire à AICC")
+    Soumettre = st.button("Soumettre le questionnaire à AISCA")
 
     if Soumettre:
         on_submit()
