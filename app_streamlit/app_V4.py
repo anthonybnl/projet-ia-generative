@@ -290,7 +290,9 @@ def affichage_metier(metier_data: dict, rank: int):
                     bordercolor="#cccccc",
                     steps=[
                         dict(range=[0, gauge_max * 0.33], color="#fdecea"),
-                        dict(range=[gauge_max * 0.33, gauge_max * 0.66], color="#fff8e1"),
+                        dict(
+                            range=[gauge_max * 0.33, gauge_max * 0.66], color="#fff8e1"
+                        ),
                         dict(range=[gauge_max * 0.66, gauge_max], color="#e8f5e9"),
                     ],
                     threshold=dict(
@@ -307,7 +309,7 @@ def affichage_metier(metier_data: dict, rank: int):
             margin=dict(l=20, r=20, t=30, b=10),
             paper_bgcolor="rgba(0,0,0,0)",
         )
-        st.plotly_chart(fig_gauge, use_container_width=True, key=f"gauge_{rank}")
+        st.plotly_chart(fig_gauge, width="stretch", key=f"gauge_{rank}")
 
     # radar blocs + radar compétences
     col_blocs, col_comp = st.columns(2)
@@ -327,17 +329,21 @@ def affichage_metier(metier_data: dict, rank: int):
             r_blocs = vals_blocs + [vals_blocs[0]]
 
             fig_blocs = go.Figure()
-            fig_blocs.add_trace(go.Scatterpolar(
-                r=r_blocs,
-                theta=theta_blocs,
-                fill="toself",
-                fillcolor=fill_color,
-                line=dict(color=color, width=2.5),
-                marker=dict(size=7, color=color),
-                hovertemplate="<b>%{theta}</b><br>Score : %{r:.4f}<extra></extra>",
-            ))
+            fig_blocs.add_trace(
+                go.Scatterpolar(
+                    r=r_blocs,
+                    theta=theta_blocs,
+                    fill="toself",
+                    fillcolor=fill_color,
+                    line=dict(color=color, width=2.5),
+                    marker=dict(size=7, color=color),
+                    hovertemplate="<b>%{theta}</b><br>Score : %{r:.4f}<extra></extra>",
+                )
+            )
             fig_blocs.update_layout(
-                title=dict(text="Maîtrise par bloc de compétences", font=dict(size=13), x=0.5),
+                title=dict(
+                    text="Maîtrise par bloc de compétences", font=dict(size=13), x=0.5
+                ),
                 polar=dict(
                     radialaxis=dict(
                         visible=True,
@@ -358,7 +364,7 @@ def affichage_metier(metier_data: dict, rank: int):
                 margin=dict(l=20, r=20, t=50, b=20),
                 paper_bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_blocs, use_container_width=True, key=f"blocs_{rank}")
+            st.plotly_chart(fig_blocs, width="stretch", key=f"blocs_{rank}")
 
     with col_comp:
         if competences:
@@ -371,15 +377,17 @@ def affichage_metier(metier_data: dict, rank: int):
             r_comp = comp_scores + [comp_scores[0]]
 
             fig_comp = go.Figure()
-            fig_comp.add_trace(go.Scatterpolar(
-                r=r_comp,
-                theta=theta_comp,
-                fill="toself",
-                fillcolor="rgba(66,133,244,0.20)",
-                line=dict(color="#4285F4", width=2.5),
-                marker=dict(size=6, color="#4285F4"),
-                hovertemplate="<b>%{theta}</b><br>Score : %{r:.4f}<extra></extra>",
-            ))
+            fig_comp.add_trace(
+                go.Scatterpolar(
+                    r=r_comp,
+                    theta=theta_comp,
+                    fill="toself",
+                    fillcolor="rgba(66,133,244,0.20)",
+                    line=dict(color="#4285F4", width=2.5),
+                    marker=dict(size=6, color="#4285F4"),
+                    hovertemplate="<b>%{theta}</b><br>Score : %{r:.4f}<extra></extra>",
+                )
+            )
             fig_comp.update_layout(
                 title=dict(text="Maîtrise par compétence", font=dict(size=13), x=0.5),
                 polar=dict(
@@ -402,7 +410,7 @@ def affichage_metier(metier_data: dict, rank: int):
                 margin=dict(l=20, r=20, t=50, b=20),
                 paper_bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_comp, use_container_width=True, key=f"comp_{rank}")
+            st.plotly_chart(fig_comp, width="stretch", key=f"comp_{rank}")
 
 
 def affichage_top3_metier(top3: list):
@@ -418,6 +426,154 @@ def graphiques_metiers(metiers: list):
     st.divider()
     st.markdown("### 🏆 Top 3 des métiers recommandés")
     affichage_top3_metier(metiers[:3])
+
+    top_metier = metiers[0]
+    st.divider()
+    st.markdown(f"### 🔍 Bilan de compétences — {top_metier['metier']}")
+
+    bilan_competence_metier(top_metier)
+
+
+def bilan_competence_metier(metier_data: dict):
+    """Bilan détaillé : acquis vs manquant pour un métier donné."""
+    competences: list = metier_data.get("compétences", [])
+    if not competences:
+        st.info("Aucune compétence disponible pour ce métier.")
+        return
+
+    SEUIL_ACQUIS = 0.40
+    SEUIL_PARTIEL = 0.10
+
+    acquis, partiels, manquants = [], [], []
+    rows = []
+
+    for c in competences:
+        titre = c.get("titre", "?")
+        domaine = c.get("domaine", "?")
+        score = c.get("score_competence", 0)
+        niveau_requis = c.get("niveau_requis", 1)
+        niveau_norm = niveau_requis / 5.0
+        gap = max(0, niveau_norm - score)
+
+        if score >= SEUIL_ACQUIS:
+            statut = "✅ Acquis"
+            acquis.append(titre)
+        elif score >= SEUIL_PARTIEL:
+            statut = "🔶 Partiel"
+            partiels.append(titre)
+        else:
+            statut = "❌ Manquant"
+            manquants.append(titre)
+
+        rows.append(
+            {
+                "domaine": domaine,
+                "titre": titre,
+                "score": score,
+                "niveau_norm": niveau_norm,
+                "gap": gap,
+                "statut": statut,
+            }
+        )
+
+    # ── PARTIE 1 : métriques synthèse ─────────────────────────────────────
+    col_a, col_b, col_c = st.columns(3)
+    col_a.metric("✅ Acquises", len(acquis), help="Score ≥ 0.40")
+    col_b.metric("🔶 Partielles", len(partiels), help="Score entre 0.10 et 0.40")
+    col_c.metric("❌ Manquantes", len(manquants), help="Score < 0.10")
+
+    st.markdown("")
+
+    # ── PARTIE 2 : bar chart groupé score actuel vs niveau requis ─────────
+    rows_sorted = sorted(rows, key=lambda x: x["gap"], reverse=True)
+    titres = [r["titre"] for r in rows_sorted]
+    scores_list = [r["score"] for r in rows_sorted]
+    niveaux_list = [r["niveau_norm"] for r in rows_sorted]
+
+    fig_gap = go.Figure()
+    fig_gap.add_trace(
+        go.Bar(
+            name="Niveau requis",
+            x=niveaux_list,
+            y=titres,
+            orientation="h",
+            marker=dict(
+                color="rgba(180,180,180,0.45)", line=dict(color="#aaaaaa", width=1)
+            ),
+            hovertemplate="<b>%{y}</b><br>Niveau requis : %{x:.2f}<extra></extra>",
+        )
+    )
+    fig_gap.add_trace(
+        go.Bar(
+            name="Score actuel",
+            x=scores_list,
+            y=titres,
+            orientation="h",
+            marker=dict(
+                color=[
+                    (
+                        "#4CAF50"
+                        if s >= SEUIL_ACQUIS
+                        else "#FF9800" if s >= SEUIL_PARTIEL else "#F44336"
+                    )
+                    for s in scores_list
+                ],
+                opacity=0.9,
+                line=dict(color="white", width=0.5),
+            ),
+            hovertemplate="<b>%{y}</b><br>Score actuel : %{x:.4f}<extra></extra>",
+        )
+    )
+    fig_gap.update_layout(
+        barmode="overlay",
+        title=dict(
+            text="Score actuel vs niveau requis par compétence", font=dict(size=13)
+        ),
+        xaxis=dict(
+            title="Score normalisé (0–1)",
+            range=[0, 1.1],
+            gridcolor="#eeeeee",
+            tickfont=dict(color="black"),
+            title_font=dict(color="black"),
+        ),
+        yaxis=dict(tickfont=dict(size=10, color="black")),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        plot_bgcolor="white",
+        height=max(350, len(titres) * 32),
+        margin=dict(l=20, r=40, t=60, b=40),
+    )
+    st.plotly_chart(fig_gap, width="stretch", key="bilan_gap_chart")
+
+    # ── PARTIE 3 : tableau détaillé trié par gap ──────────────────────────
+    st.markdown("#### 📋 Détail par compétence (trié par priorité de développement)")
+
+    def color_statut(val):
+        if "Acquis" in val:
+            return "color: #2e7d32; font-weight: bold"
+        elif "Partiel" in val:
+            return "color: #e65100; font-weight: bold"
+        else:
+            return "color: #b71c1c; font-weight: bold"
+
+    df_bilan = pd.DataFrame(
+        [
+            {
+                "Domaine": r["domaine"],
+                "Compétence": r["titre"],
+                "Score actuel": str(round(r["score"], 2)),
+                "Niveau requis": str(round(r["niveau_norm"], 2)),
+                "Écart": str(round(r["gap"], 2)),
+                "Statut": r["statut"],
+            }
+            for r in rows_sorted
+        ]
+    )
+
+    st.dataframe(
+        df_bilan.style.map(color_statut, subset=["Statut"]),
+        width="stretch",
+        hide_index=True,
+    )
 
 
 def main():
