@@ -1,0 +1,207 @@
+[
+    {
+        "metier": "TESTEUR",
+        "description": "Vérifie la conformité et la qualité des applications. Réalise des tests fonctionnels et techniques. Identifie et suit les anomalies.",
+        "compétences": [
+            {
+                "id_competence": "B.2",
+                "titre": "Intégration des composants",
+                "detail": "Intègre des composants matériels, logiciels ou de sous-systèmes dans un système existant ou totalement nouveau. Respecte les procédures et processus établis comme la gestion de configurations et la maintenance de packages. Prend en compte la compatibilité des modules existants ou nouveaux pour assurer l'intégrité du système, son interopérabilité et la sécurité de l'information. Vérifie et soumet à essai la capacité et les performances du système ainsi que la documentation dans le cas d'une intégration réussie.",
+                "domaine": "B. Développer",
+                "niveau_requis": 2,
+                "score_competence": 0
+            },
+            {
+                "id_competence": "B.3",
+                "titre": "Tests",
+                "detail": "Met au point et exécute des procédures d'essai systématiques pour les systèmes informatiques ou les exigences d'utilisabilité du client afin d'établir la conformité avec les spécifications de conception. S'assure que les composants ou systèmes, nouveaux ou mis à jour, fonctionnent comme prévu. Garantit la conformité aux spécifications internes, externes, nationales et internationales, ce qui inclut les normes de santé, de sécurité, d'utilisabilité, de performance, de fiabilité et de compatibilité. Produit des documents et des rapports mettant en évidence les exigences de certification.",
+                "domaine": "B. Développer",
+                "niveau_requis": 3,
+                "score_competence": 0.40899354
+            },
+            {
+                "id_competence": "B.5",
+                "titre": "Production de la documentation",
+                "detail": "Produit des documents en intégrant des informations et en maintenant la conformité aux exigences importantes. Choisit le style et le format appropriés en déterminant le type de support et le mode de présentation de la documentation. Crée des Adapte le niveau de détail modèles pour les systèmes de gestion de documents. S'assure de manière à répondre aux que la documentation est conforme aux besoins techniques et besoins du public ciblé. aux besoins des processus de développement des applications TIC des clients, et que les documents existants sont valides et à jour. Soutient le développement de documents interactifs.",
+                "domaine": "B. Développer",
+                "niveau_requis": 2,
+                "score_competence": 0.35468900000000003
+            },
+            {
+                "id_competence": "E.8",
+                "titre": "Gestion de la sécurité de l'information",
+                "detail": "Gère la politique de sécurité de l'information et des systèmes en tenant compte des menaces de nature technique, humaine, organisationnelle et des autres menaces importantes, en accord avec la stratégie informatique et la stratégie métier, en reflétant la culture de risque de l'organisation. Déploie et gère les ressources opérationnelles et spécialisées (par exemple la criminalistique, l'intelligence des menaces et la détection des intrusions) nécessaires pour assurer l'aptitude à la gestion des incidents liés à la sécurité et faire des recommandations pour l'amélioration continue de la politique et de la stratégie de sécurité.",
+                "domaine": "E. Gérer",
+                "niveau_requis": 2,
+                "score_competence": 0.35286490000000004
+            }
+        ],
+        "score": 0.29356538000000004,
+        "score_par_bloc": {
+            "B. Développer": 0.27662266,
+            "E. Gérer": 0.35286490000000004
+        }
+    },
+    {
+        "metier": "DATA ENGINEER",
+        "description": "Conçoit et maintient les pipelines de données et infrastructures associées. Assure la collecte, transformation et stockage des données. Travaille étroitement avec les data scientists et analystes.",
+        "compétences": [
+            {
+                "id_competence": "A.5",
+                "titre": "Conception de l'architecture",
+                "detail": "Définit, détaille, actualise et met en place une approche formelle pour implémenter les solutions nécessaires au développement et à l'exploitation de l'architecture du SI, en tenant compte des exigences issues de l'activité, du management et de l'infrastructure de données et d'information. Identifie les modifications nécessaires et les composants concernés : matériels, logiciels, applications, processus, services, informations et plateforme technologique. Prend en compte l'interopérabilité, la réversibilité, l'évolutivité, la facilité d'utilisation, l'accessibilité et la sécurité, y compris le besoin de prévoir l'évolution et la gestion de la vulnérabilité au sein des technologies actuelles et émergentes. S'assure de la correspondance entre l'évolution de l'activité et les développements technologiques et les services, afin d'assurer la capacité des solutions informatiques conformément au SLA.",
+                "domaine": "A. Planifier",
+                "niveau_requis": 3,
+                "score_competence": 0
+            },
+            {
+                "id_competence": "A.7",
+                "titre": "Veille technologique",
+                "detail": "Étudie en détail les dernières innovations technologiques en matière de TIC pour aider à la compréhension des évolutions technologiques. Encourage et explore les sources internes et externes (y compris par exemple les activités de recherche, les brevets, les activités de démarrage, les communautés numériques) pour des idées et opportunités innovantes. Met au point des solutions originales pour l'adoption ou l'intégration de technologies et/ou d'idées nouvelles ou existantes dans des produits, applications ou services existants, ou pour la création de nouveaux produits, applications ou services.",
+                "domaine": "A. Planifier",
+                "niveau_requis": 3,
+                "score_competence": 0.39162399999999997
+            },
+            {
+                "id_competence": "B.6",
+                "titre": "Ingénierie des systèmes TIC",
+                "detail": "Construit les réseaux/connexions de réseau, les composants et les interfaces nécessaires. Suit une méthodologie systématique pour analyser et étudier des plateformes d'infrastructure ou des solutions pour le cloud, l'IoT et d'autres technologies afin de répondre aux exigences commerciales et techniques. Construit des modèles de structuration des systèmes et met en place un comportement système pour intégrer des dispositifs physiques, des réseaux, des composants matériels et/ou logiciels. S'assure de la sécurité de l'information, de la protection des données et de l'efficacité énergétique. Réalise des essais pour confirmer que les exigences sont remplies.",
+                "domaine": "B. Développer",
+                "niveau_requis": 3,
+                "score_competence": 0.42831969999999997
+            },
+            {
+                "id_competence": "C.3",
+                "titre": "Fourniture de services",
+                "detail": "Assure la fourniture des services en fonction des accords sur les niveaux de service (SLA) établis. Prend des mesures proactives pour assurer la stabilité et la sécurité des applications et de l'infrastructure des TIC afin d'éviter d'éventuelles interruptions de service, en tenant compte des problématiques de planification des capacités et de sécurité des informations. Tient à jour la base de données des documents opérationnels ainsi que les journaux des incidents de service. Assure la maintenance des outils de suivi et de gestion (par exemple scripts, procédures). Maintient les services du Système d'Information (SI). Gère tous les aspects de disponibilité de service.",
+                "domaine": "C. Exploiter",
+                "niveau_requis": 3,
+                "score_competence": 0
+            },
+            {
+                "id_competence": "C.4",
+                "titre": "Gestion des problèmes",
+                "detail": "Gère le cycle de vie des incidents et des problèmes. Identifie l'origine des incidents et les résout. Adopte une approche proactive pour éviter ou identifier l'origine des problèmes informatiques. Met en place un système de connaissances basé sur la récurrence d'erreurs habituelles. Résout ou fait remonter les incidents. Optimise les performances des systèmes ou des composants.",
+                "domaine": "C. Exploiter",
+                "niveau_requis": 3,
+                "score_competence": 0.3663292
+            },
+            {
+                "id_competence": "D.7",
+                "titre": "Science des données et analyse",
+                "detail": "Utilise et met en application des techniques d'analyse des données telles que l'exploration des données, l'apprentissage automatique, les analyses prescriptives et prédictives permettant d'exploiter les données pour répondre aux défis et aux opportunités de l'organisation. Identifie, extrait et intègre des données hétérogènes à partir de nombreuses sources, tout en respectant les aspects éthiques et en garantissant la conformité aux différentes réglementation s en matière de protection des données personnelles. Évalue les données existantes et identifie les nouvelles exigences en matière de données dans l'intérêt de l'organisation, y compris les réseaux sociaux et les données ouvertes.",
+                "domaine": "D. Faciliter",
+                "niveau_requis": 2,
+                "score_competence": 0.69608402
+            },
+            {
+                "id_competence": "D.10",
+                "titre": "Gestion de l'information et de la connaissance",
+                "detail": "Identifie les informations et les connaissances importantes pour l'organisation et développe les processus et les structures pour les gérer. Crée une structure d'information pour permettre l'exploitation, l'optimisation et le partage des informations. Maîtrise les bons outils et les déploie pour créer, extraire, maintenir, renouveler et diffuser les connaissances métier afin de tirer profit des informations.",
+                "domaine": "D. Faciliter",
+                "niveau_requis": 3,
+                "score_competence": 0.3946659
+            },
+            {
+                "id_competence": "E.3",
+                "titre": "Gestion des risques",
+                "detail": "Met en œuvre la gestion des risques dans les systèmes d'information en appliquant les politiques et les procédures de gestion des risques définies par l'entreprise. Évalue les risques encourus par les activités de l'organisation, y compris ceux liés au web, au cloud et aux ressources mobiles. Documente les risques potentiels et les plans d'action pour les maîtriser.",
+                "domaine": "E. Gérer",
+                "niveau_requis": 2,
+                "score_competence": 0
+            },
+            {
+                "id_competence": "E.6",
+                "titre": "Gestion de la qualité des TIC",
+                "detail": "Met en œuvre une politique de qualité des TIC destinée à maintenir et améliorer la mise à disposition des services et des produits. Planifie et définit des indicateurs servant à gérer la qualité conformément à la stratégie des TIC. Vérifie la pertinence des indicateurs de qualité et suggère des recommandations pour orienter l'amélioration continue de la qualité.",
+                "domaine": "E. Gérer",
+                "niveau_requis": 3,
+                "score_competence": 0
+            },
+            {
+                "id_competence": "E.8",
+                "titre": "Gestion de la sécurité de l'information",
+                "detail": "Gère la politique de sécurité de l'information et des systèmes en tenant compte des menaces de nature technique, humaine, organisationnelle et des autres menaces importantes, en accord avec la stratégie informatique et la stratégie métier, en reflétant la culture de risque de l'organisation. Déploie et gère les ressources opérationnelles et spécialisées (par exemple la criminalistique, l'intelligence des menaces et la détection des intrusions) nécessaires pour assurer l'aptitude à la gestion des incidents liés à la sécurité et faire des recommandations pour l'amélioration continue de la politique et de la stratégie de sécurité.",
+                "domaine": "E. Gérer",
+                "niveau_requis": 3,
+                "score_competence": 0.35286490000000004
+            }
+        ],
+        "score": 0.2569135407142857,
+        "score_par_bloc": {
+            "A. Planifier": 0.19581199999999999,
+            "B. Développer": 0.4283197,
+            "C. Exploiter": 0.1831646,
+            "D. Faciliter": 0.515233148,
+            "E. Gérer": 0.1323243375
+        }
+    },
+    {
+        "metier": "DATA SCIENTISTE",
+        "description": "Analyse des données complexes pour en extraire des insights et construire des modèles prédictifs. Utilise des techniques de machine learning, statistiques et programmation. Aide à la prise de décision stratégique basée sur la donnée.",
+        "compétences": [
+            {
+                "id_competence": "A.7",
+                "titre": "Veille technologique",
+                "detail": "Étudie en détail les dernières innovations technologiques en matière de TIC pour aider à la compréhension des évolutions technologiques. Encourage et explore les sources internes et externes (y compris par exemple les activités de recherche, les brevets, les activités de démarrage, les communautés numériques) pour des idées et opportunités innovantes. Met au point des solutions originales pour l'adoption ou l'intégration de technologies et/ou d'idées nouvelles ou existantes dans des produits, applications ou services existants, ou pour la création de nouveaux produits, applications ou services.",
+                "domaine": "A. Planifier",
+                "niveau_requis": 4,
+                "score_competence": 0.39162399999999997
+            },
+            {
+                "id_competence": "A.9",
+                "titre": "Innovation",
+                "detail": "Envisage des solutions créatives pour élaborer de nouveaux concepts, idées, produits ou services. Fait preuve d'un mode de pensée ouvert et innovant, sachant tirer parti des avancées technologiques pour répondre aux besoins de l'activité/de l'entreprise ou pour orienter la recherche.",
+                "domaine": "A. Planifier",
+                "niveau_requis": 4,
+                "score_competence": 0
+            },
+            {
+                "id_competence": "D.7",
+                "titre": "Science des données et analyse",
+                "detail": "Utilise et met en application des techniques d'analyse des données telles que l'exploration des données, l'apprentissage automatique, les analyses prescriptives et prédictives permettant d'exploiter les données pour répondre aux défis et aux opportunités de l'organisation. Identifie, extrait et intègre des données hétérogènes à partir de nombreuses sources, tout en respectant les aspects éthiques et en garantissant la conformité aux différentes réglementation s en matière de protection des données personnelles. Évalue les données existantes et identifie les nouvelles exigences en matière de données dans l'intérêt de l'organisation, y compris les réseaux sociaux et les données ouvertes.",
+                "domaine": "D. Faciliter",
+                "niveau_requis": 4,
+                "score_competence": 0.69608402
+            },
+            {
+                "id_competence": "D.10",
+                "titre": "Gestion de l'information et de la connaissance",
+                "detail": "Identifie les informations et les connaissances importantes pour l'organisation et développe les processus et les structures pour les gérer. Crée une structure d'information pour permettre l'exploitation, l'optimisation et le partage des informations. Maîtrise les bons outils et les déploie pour créer, extraire, maintenir, renouveler et diffuser les connaissances métier afin de tirer profit des informations.",
+                "domaine": "D. Faciliter",
+                "niveau_requis": 4,
+                "score_competence": 0.3946659
+            },
+            {
+                "id_competence": "D.11",
+                "titre": "Identification des besoins",
+                "detail": "Écoute attentivement les clients internes et externes, formule et clarifie leurs besoins. Gère les relations avec toutes les parties prenantes pour garantir que les solutions et les services sont conformes aux exigences métier. Propose différentes solutions (par exemple « faire ou faire faire ») en effectuant des analyses contextuelles favorisant la conception de systèmes centrés sur l'utilisateur. Conseille le client pour le choix d'une solution appropriée. Agit comme un défenseur de la solution choisie et s'engage dans sa mise en œuvre ou son processus de configuration.",
+                "domaine": "D. Faciliter",
+                "niveau_requis": 5,
+                "score_competence": 0
+            },
+            {
+                "id_competence": "E.1",
+                "titre": "Développement prévisionnel",
+                "detail": "Interprète les besoins du marché et évalue l'accueil par le marché de nouveaux produits ou services. Évalue les possibilités pour l'organisation de satisfaire aux exigences futures de qualité et de production. Applique un système de mesure approprié pour faciliter la prise de décision dans les fonctions de production, de marketing, de vente et de distribution.",
+                "domaine": "E. Gérer",
+                "niveau_requis": 3,
+                "score_competence": 0
+            },
+            {
+                "id_competence": "E.6",
+                "titre": "Gestion de la qualité des TIC",
+                "detail": "Met en œuvre une politique de qualité des TIC destinée à maintenir et améliorer la mise à disposition des services et des produits. Planifie et définit des indicateurs servant à gérer la qualité conformément à la stratégie des TIC. Vérifie la pertinence des indicateurs de qualité et suggère des recommandations pour orienter l'amélioration continue de la qualité.",
+                "domaine": "E. Gérer",
+                "niveau_requis": 4,
+                "score_competence": 0
+            }
+        ],
+        "score": 0.2117677028571429,
+        "score_par_bloc": {
+            "A. Planifier": 0.19581199999999999,
+            "D. Faciliter": 0.33561536,
+            "E. Gérer": 0
+        }
+    }
+]

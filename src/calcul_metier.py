@@ -1,7 +1,52 @@
 import pandas as pd
 
 
-def calcul_score_competence(
+def ref_agreger_metier_competences(
+    df_metier: pd.DataFrame, df_competences: pd.DataFrame
+) -> dict[str, dict]:
+
+    # on regroupe par métier les compétences associées
+
+    metiers: dict[str, dict] = {}
+
+    df_metier_competences = df_metier.merge(
+        df_competences[["id", "titre", "compétence"]],
+        left_on="id_competence",
+        right_on="id",
+        how="inner",
+    )
+
+    print(df_metier_competences.info())
+
+    for index, row in df_metier_competences.iterrows():
+        metier = row["métier"]
+        description = row["description"]
+        domaine = row["domaine de compétence"]
+        id_competence = row["id_competence"]
+        niveau = row["niveau"]
+        titre_competence = row["titre"]
+        detail_competence = row["compétence"]
+
+        if not metier in metiers:
+            metiers[metier] = {
+                "metier": metier,
+                "description": description,
+                "compétences": [],
+            }
+
+        metiers[metier]["compétences"].append(
+            {
+                "id_competence": id_competence,
+                "niveau": niveau,
+                "domaine": domaine,
+                "tittre": titre_competence,
+                "compétence": detail_competence,
+            }
+        )
+    return metiers
+
+
+def agreger_score_competence_tout_ref(
     df_metier: pd.DataFrame, df_competences: pd.DataFrame, data: list[dict]
 ) -> dict[str, float]:
 
@@ -32,51 +77,25 @@ def trouver_metier(
     score_par_competence: dict[str, float],
 ) -> list[dict]:
 
-    # on regroupe par métier
-
-    df_metier_competences = df_metier.merge(
-        df_competences[["id", "titre", "compétence"]],
-        left_on="id_competence",
-        right_on="id",
-        how="inner",
-    )
-
-    print(df_metier_competences.info())
-
-    metiers: dict[str, list[dict]] = {}
-
-    for index, row in df_metier_competences.iterrows():
-        metier = row["métier"]
-        domaine = row["domaine de compétence"]
-        id_competence = row["id_competence"]
-        niveau = row["niveau"]
-        titre_competence = row["titre"]
-        detail_competence = row["compétence"]
-
-        if not metier in metiers:
-            metiers[metier] = []
-
-        metiers[metier].append(
-            {
-                "id_competence": id_competence,
-                "niveau": niveau,
-                "domaine": domaine,
-                "tittre": titre_competence,
-                "compétence": detail_competence,
-            }
-        )
+    ref_metiers = ref_agreger_metier_competences(df_metier, df_competences)
 
     resultats = []
 
-    for metier in metiers:
+    for metier in ref_metiers:
+        description = ref_metiers[metier]["description"]
+
         total_coefficient = 0
         total_score = 0
 
         blocs_competence = {}
 
-        resultat_metier = {"metier": metier, "compétences": []}
+        resultat_metier = {
+            "metier": metier,
+            "description": description,
+            "compétences": [],
+        }
 
-        for competence in metiers[metier]:
+        for competence in ref_metiers[metier]["compétences"]:
             id_competence = competence["id_competence"]
             niveau = competence["niveau"]
             domaine = competence["domaine"]
@@ -122,6 +141,7 @@ def trouver_metier(
     resultats.sort(key=lambda x: x.get("score"), reverse=True)
 
     # top 3 des métiers
-    resultats = resultats[:3]
+    # TODO dans config
+    resultats = resultats[:10]
 
     return resultats
