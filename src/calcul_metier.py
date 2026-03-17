@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def calcul_score_competence(
+def agreger_score_competence_tout_ref(
     df_metier: pd.DataFrame, df_competences: pd.DataFrame, data: list[dict]
 ) -> dict[str, float]:
 
@@ -122,6 +122,7 @@ def trouver_metier(
     resultats.sort(key=lambda x: x.get("score"), reverse=True)
 
     # top 3 des métiers
-    resultats = resultats[:3]
+    # TODO dans config
+    resultats = resultats[:10]
 
     return resultats

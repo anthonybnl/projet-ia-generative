@@ -5,7 +5,7 @@ from fastapi import Body, FastAPI, Query
 import numpy
 import pandas as pd
 from sentence_transformers import SentenceTransformer
-from src.calcul_metier import calcul_score_competence, trouver_metier
+from src.calcul_metier import agreger_score_competence_tout_ref, trouver_metier
 from pathlib import Path
 
 app = FastAPI(
@@ -122,46 +122,12 @@ async def calculer_score_metier(
     all_queries = []
     for query in [query1, query2]:
         query = query.strip()
-        if len(query) >= 5:
+        if len(query) > 0:
             all_queries.append(query)
 
-    # all_queries = []
-    # for query in [query1, query2]:
-    #     sentences = query.split(".")
-    #     for sentence in sentences:
-    #         sentence = sentence.strip()
-    #         if len(sentence) >= 5:
-    #             all_queries.append(sentence)
+    all_results = calculer_scores_competences(all_queries)
 
-    embeddings = transformer.encode(
-        all_queries
-    )  # on encode les deux compétences à tester
-
-    # return embeddings.shape
-
-    res = collection.query(
-        query_embeddings=embeddings, n_results=100
-    )  # on calcule pour l'ensemble des compétences
-
-    all_results = []
-
-    for query_number in range(len(all_queries)):
-        print(f"Résultats pour la requête : {all_queries[query_number]}")
-        dict_all_score = {}
-
-        for ix, id in enumerate(res.get("ids")[query_number]):
-            distance = res.get("distances")[query_number][ix]
-            cosine_sim = (
-                1.0 - distance
-            )  # voir la doc de ChromaDB : distance = 1.0 - cosine_sim
-
-            # on ne tient compte du score que si on a au moins SEUIL_SIMILARITE.
-            if cosine_sim >= SEUIL_SIMILARITE:
-                dict_all_score[id] = cosine_sim
-
-        all_results.append(dict_all_score)
-
-    res = calcul_score_competence(df_metier, df_competences, all_results)
+    res = agreger_score_competence_tout_ref(df_metier, df_competences, all_results)
 
     metiers = trouver_metier(df_metier, df_competences, res)
 
@@ -172,7 +138,11 @@ async def calculer_score_metier(
     }
 
 
-def calculer_embeddings(queries) -> list[dict[str, float]]:
+def calculer_scores_competences(queries) -> list[dict[str, float]]:
+
+    if len(queries) == 0:
+        return []
+
     embeddings = transformer.encode(queries)  # on encode les deux compétences à tester
 
     # return embeddings.shape
@@ -211,10 +181,12 @@ async def recommender_metier(json_data: dict = Body()):
 
     questions_libres: dict = json_data.get("description_libre")
     for key in questions_libres:
-        queries_questions_libres.append(questions_libres[key].strip().lower())
+        query = questions_libres[key].strip().lower()
+        if len(query) > 0:
+            queries_questions_libres.append(query)
 
     # TODO : nettoyage des questions libres
-    embeddings_questions_libre = calculer_embeddings(queries_questions_libres)
+    embeddings_questions_libre = calculer_scores_competences(queries_questions_libres)
 
     # partie questions guidées
 
@@ -225,11 +197,11 @@ async def recommender_metier(json_data: dict = Body()):
     for key in questions_guidees:
         not_concerned = questions_guidees[key].get("etat").lower()
         if not_concerned == "oui" or not_concerned == "partiellement":
-            queries_questions_guidees.append(
-                questions_guidees[key].get("description").strip().lower()
-            )
+            query = questions_guidees[key].get("description").strip().lower()
+            if len(query) > 0:
+                queries_questions_guidees.append(query)
 
-    embeddings_questions_guidees = calculer_embeddings(queries_questions_guidees)
+    embeddings_questions_guidees = calculer_scores_competences(queries_questions_guidees)
 
     # partie auto évaluation
 
@@ -261,7 +233,7 @@ async def recommender_metier(json_data: dict = Body()):
     inputs += embeddings_questions_guidees
     inputs.append(score_competence)
 
-    final_score_competences = calcul_score_competence(
+    final_score_competences = agreger_score_competence_tout_ref(
         df_metier,
         df_competences,
         inputs,
