@@ -1,3 +1,4 @@
+import json
 import os
 import chromadb
 from dotenv import load_dotenv
@@ -8,6 +9,9 @@ from sentence_transformers import SentenceTransformer
 from src.calcul_metier import agreger_score_competence_tout_ref, trouver_metier
 from src.nettoyage_texte import preprocess_it_text
 from pathlib import Path
+import google.generativeai as genai
+
+load_dotenv()
 
 app = FastAPI(
     title="API Pour notre projet",
@@ -16,7 +20,6 @@ app = FastAPI(
 
 # chroma
 
-load_dotenv()
 CHROMA_HOST = os.environ.get("CHROMA_HOST")
 CHROMA_PORT = os.environ.get("CHROMA_PORT")
 chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
@@ -41,6 +44,10 @@ DATA_FOLDER = Path.cwd() / "data"
 
 df_competences = pd.read_csv(str(DATA_FOLDER / "cigref_competence_clean.csv"))
 df_metier = pd.read_csv(str(DATA_FOLDER / "cigref_metier_clean.csv"))
+
+# LLM
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
 
 # api
 
@@ -114,14 +121,14 @@ async def test_sbert(
     return array_result
 
 
-@app.get("/calculer_score_metier/")
+@app.get("/test_calcul_score_metier/")
 async def calculer_score_metier(
     query1: str = Query("exploration des données"),
-    query2: str = Query(""),
+    # query2: str = Query(""),
 ):
 
     all_queries = []
-    for query in [query1, query2]:
+    for query in [query1]:
         query = query.strip()
         if len(query) > 0:
             all_queries.append(query)
@@ -173,8 +180,11 @@ def calculer_scores_competences(queries) -> list[dict[str, float]]:
     return all_results
 
 
-@app.post("/recommender_metier/")
-async def recommender_metier(json_data: dict = Body()):
+def generer_inputs_pour_moteur(json_data: dict):
+
+    inputs: list[dict[str, float]] = (
+        []
+    )  # liste de dictionnaires de la forme {id_competence: score}
 
     # partie questions libre
 
@@ -190,6 +200,8 @@ async def recommender_metier(json_data: dict = Body()):
     # TODO : nettoyage des questions libres
     embeddings_questions_libre = calculer_scores_competences(queries_questions_libres)
 
+    inputs.extend(embeddings_questions_libre)
+
     # partie questions guidées
 
     queries_questions_guidees = []
@@ -204,7 +216,11 @@ async def recommender_metier(json_data: dict = Body()):
             if len(query) > 0:
                 queries_questions_guidees.append(query)
 
-    embeddings_questions_guidees = calculer_scores_competences(queries_questions_guidees)
+    embeddings_questions_guidees = calculer_scores_competences(
+        queries_questions_guidees
+    )
+
+    inputs.extend(embeddings_questions_guidees)
 
     # partie auto évaluation
 
@@ -229,12 +245,57 @@ async def recommender_metier(json_data: dict = Body()):
                         # TODO : fichier de config pour le 0.8
                         score_competence[competence] = (
                             auto_eval[key].get(competence) / 5.0
-                        ) * 0.6  # coefficient de 0.8 pour les auto évaluations
+                        ) * 0.8  # coefficient de 0.8 pour les auto évaluations
 
-    inputs: list[dict[str, float]] = []
-    inputs += embeddings_questions_libre
-    inputs += embeddings_questions_guidees
     inputs.append(score_competence)
+
+    return inputs
+
+
+def appel_llm_pour_reponse_utilisateur(data_questionnaire, metiers):
+    if not GEMINI_API_KEY:
+        raise Error(
+            "Erreur de configuration : Clé API Gemini introuvable sur le serveur."
+        )
+
+    # 2. Configurer Gemini avec la clé API
+    genai.configure(api_key=GEMINI_API_KEY)
+
+    # 3. Lire le prompt système
+    with open("app_streamlit/system_prompt.txt", "r", encoding="utf-8") as file:
+        system_prompt = file.read()
+
+    # 4. Configurer le modèle Gemini 2.5 Flash
+    model = genai.GenerativeModel(
+        model_name="gemini-2.5-flash", system_instruction=system_prompt
+    )
+
+    # 5. Préparer le contexte utilisateur
+    user_data_str = json.dumps(data_questionnaire, ensure_ascii=False, indent=2)
+
+    api_results_str = json.dumps(metiers, ensure_ascii=False, indent=2)
+
+    prompt_utilisateur = f"""
+    Voici le profil renseigné par l'utilisateur :
+    {user_data_str}
+
+    Voici les résultats de notre moteur de recommandation (métiers et scores) :
+    {api_results_str}
+
+    Merci de rédiger la restitution en te basant sur ces informations.
+                    """
+
+    response_stream = model.generate_content(prompt_utilisateur)
+
+    response_texte = response_stream.text
+
+    return str(response_texte)
+
+
+@app.post("/recommender_metier/")
+async def recommender_metier(json_data: dict = Body()):
+
+    inputs = generer_inputs_pour_moteur(json_data)
 
     final_score_competences = agreger_score_competence_tout_ref(
         df_metier,
@@ -246,5 +307,15 @@ async def recommender_metier(json_data: dict = Body()):
 
     return {
         "metiers": metiers,
-        "compétences": final_score_competences,
+        # "compétences": final_score_competences,
     }
+
+
+@app.post("/recommender_metier_llm_response/")
+async def recommender_metier_llm_response(json_data: dict = Body()) -> str:
+    questionnaire = json_data.get("questionnaire")
+    metiers = json_data.get("metiers")
+
+    llm_response = appel_llm_pour_reponse_utilisateur(json_data, metiers)
+
+    return str(llm_response)

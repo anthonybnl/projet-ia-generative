@@ -343,7 +343,7 @@ def on_submit():
 
         st.divider()
 
-        appel_llm(json_data, data.get("metiers"))
+        # appel_llm(json_data, data.get("metiers"))
 
         st.divider()
 
