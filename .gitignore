@@ -9,3 +9,7 @@ app_streamlit/models
 app_streamlit/data/responses
 
 .venv
+
+database/cache.db
+
+.env
