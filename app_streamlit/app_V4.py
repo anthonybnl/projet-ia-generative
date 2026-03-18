@@ -6,7 +6,6 @@ import json
 import uuid
 import datetime as dt
 from charts import graphiques_metiers
-import google.generativeai as genai
 
 from dotenv import load_dotenv
 
@@ -256,60 +255,62 @@ def part3_auto_eval_competences():
             st.slider("Déploiement de la solution", 0, 5, 0, key="B.4")
 
 
-def appel_llm(json_data, api_results: list[dict]):
+def plan_de_progression_et_bio(json_data, api_results: list[dict]):
     st.header("✨ Analyse de votre profil par AISCA")
 
-    if not gemini_api_key:
-        st.error("Erreur de configuration : Clé API Gemini introuvable sur le serveur.")
-    else:
-        try:
-            # 2. Configurer Gemini avec la clé API
-            genai.configure(api_key=gemini_api_key)
+    input = {
+        "questionnaire": json_data,
+        "metiers": api_results,
+    }
 
-            # 3. Lire le prompt système
-            with open("app_streamlit/system_prompt.txt", "r", encoding="utf-8") as file:
-                system_prompt = file.read()
+    with st.status("Traitement MAGIR en cours...", expanded=True) as status:
 
-            # 4. Configurer le modèle Gemini 2.5 Flash
-            model = genai.GenerativeModel(
-                model_name="gemini-2.5-flash", system_instruction=system_prompt
+        response = requests.post(
+            "http://localhost:8000/recommender_metier_llm_response/", json=input
+        )
+        if response.status_code == 200:
+
+            status.update(
+                label="Réponse de MAGIR reçue !",
+                state="complete",
+                expanded=True,
             )
 
-            # 5. Préparer le contexte utilisateur
-            user_data_str = json.dumps(json_data, ensure_ascii=False, indent=2)
+            is_cached = response.json().get("cached")
+            difference = response.json().get("difference")
+            if is_cached:
+                st.info(
+                    "Le plan de progression affiché provient du cache, basé sur une recommandation similaire déjà traitée auparavant."
+                )
+                difference_pourcent = difference * 100
+                st.info(
+                    f"Différence en pourcentage avec la recommandation la plus proche en cache : {difference_pourcent:.2f}%"
+                )
+            else:
+                st.success(
+                    "Le plan de progression affiché a été généré par le LLM en réponse à votre profil unique."
+                )
 
-            api_results_str = json.dumps(api_results, ensure_ascii=False, indent=2)
+            st.markdown(response.json().get("response"))
 
-            prompt_utilisateur = f"""
-            Voici le profil renseigné par l'utilisateur :
-            {user_data_str}
+        else:
 
-            Voici les résultats de notre moteur de recommandation (métiers et scores) :
-            {api_results_str}
-
-            Merci de rédiger la restitution en te basant sur ces informations.
-                            """
-
-            # 6. Appel à l'API en streaming
-            st.write("Génération de l'analyse en cours...")
-
-            response_stream = model.generate_content(prompt_utilisateur, stream=True)
-
-            # 7. Affichage du stream
-            # st.write_stream prend un générateur, on boucle sur les chunks
-            def stream_generator():
-                for chunk in response_stream:
-                    yield chunk.text
-
-            st.write_stream(stream_generator())
-
-        except Exception as e:
-            raise e
-            # st.error(f"Erreur lors de la communication avec Gemini : {e}")
+            status.update(
+                label="Erreur lors de la récupération du plan de progression",
+                state="error",
+                expanded=True,
+            )
+            st.error(
+                f"Erreur lors de la récupération du plan de progression : {response.status_code}"
+            )
+            try:
+                st.json(response.json())
+            except Exception as e:
+                pass
 
 
 def on_submit():
-    st.success("Le questionnaire a été soumis à AICC ! ✅")
+    st.success("Le questionnaire a été soumis à MAGIR ! ✅")
 
     # génération du JSON et sauvegarde locale
     json_data = build_JSON()
@@ -320,34 +321,25 @@ def on_submit():
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(json_data, f, ensure_ascii=False, indent=2)
 
-    st.info(f"Les éléments textuels ont été sauvegardés dans : `{filename}`")
-
-    # debug
-
-    # st.markdown("### Aperçu des données envoyées à l'API")
-    # st.json(json_data)
-
-    # appel d'api pour POST le JSON
+    # st.info(f"Les éléments textuels ont été sauvegardés dans : `{filename}`")
 
     response = requests.post(
         "http://localhost:8000/recommender_metier/", json=json_data
     )
     if response.status_code == 200:
-        st.success("Réponse reçue de l'API ! ✅")
+        # st.success("Réponse reçue de l'API ! ✅")
 
         data = response.json()
 
         metiers = data.get("metiers")
 
-        graphiques_metiers(metiers)
+        with st.expander("Visuels concernant les métiers recommandés", expanded=True):
+            graphiques_metiers(metiers)
 
-        st.divider()
+        plan_de_progression_et_bio(json_data, data.get("metiers"))
 
-        # appel_llm(json_data, data.get("metiers"))
-
-        st.divider()
-
-        st.json(data)
+        # st.divider()
+        # st.json(data)
     else:
         st.error(f"Erreur lors de l'appel de l'API : {response.status_code}")
 
@@ -355,9 +347,9 @@ def on_submit():
 def main():
     st.set_page_config(page_title="Cartographie des compétences", layout="wide")
 
-    st.markdown("# 🧠 AICC – Agent Intelligent pour la Cartographie des Compétences")
+    st.markdown("# 🧠 MAGIR – Matching Agent for Generated IT Roles")
     st.markdown(
-        "Ce questionnaire permet à **AICC** d’analyser votre profil, vos compétences et vos préférences, afin de recommander des métiers adaptés et de générer un plan de progression personnalisé "
+        "Ce questionnaire permet à **MAGIR** d’analyser votre profil, vos compétences et vos préférences, afin de recommander des métiers adaptés et de générer un plan de progression personnalisé "
     )
     st.divider()
 

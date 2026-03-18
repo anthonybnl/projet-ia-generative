@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import chromadb
@@ -49,6 +50,11 @@ df_metier = pd.read_csv(str(DATA_FOLDER / "cigref_metier_clean.csv"))
 # LLM
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
+
+# Cache
+
+DIFFERENCE_THRESHOLD_METIER = 0.15
+DIFFERENCE_THRESHOLD_COMPETENCE = 0.25
 
 # api
 
@@ -328,8 +334,8 @@ def get_same_recommandation_if_exists(metier: dict):
 
     for rec in recommandations:
 
-        # d'abord on regarde le score global, s'il est dans une fourchette proche (+- 0.15)
-        if abs(rec.get("score") - score) <= 0.15:
+        # d'abord on regarde le score global, s'il est dans une fourchette proche (+- DIFFERENCE_THRESHOLD_METIER)
+        if abs(rec.get("score") - score) <= DIFFERENCE_THRESHOLD_METIER:
 
             set_competences_cache = {c.get("id_competence") for c in rec.get("compétences")}
             
@@ -342,14 +348,14 @@ def get_same_recommandation_if_exists(metier: dict):
             # somme des erreurs quadratiques pour les compétences
             sse_competences = 0.0
 
-            # pour chaque compétence on vérifie si +- 0.15 du score
+            # pour chaque compétence on vérifie si +- DIFFERENCE_THRESHOLD_COMPETENCE du score
             for c in rec.get("compétences"):
                 id_competence = c.get("id_competence")
                 score_competence = c.get("score_competence")
 
                 err_competence = lookup_competences[id_competence] - score_competence
                 sse_competences += err_competence * err_competence
-                if abs(err_competence) > 0.15:
+                if abs(err_competence) > DIFFERENCE_THRESHOLD_COMPETENCE:
                     all_competences_match = False
                     break
 
@@ -375,21 +381,28 @@ async def recommender_metier_llm_response(json_data: dict = Body()):
 
     top_metier = metiers[0]
 
-    # on va vérifier si on a pas dans le cache une recommandation pour ce métier.
-    recommandation = get_same_recommandation_if_exists(top_metier)
+    try:
+        # on va vérifier si on a pas dans le cache une recommandation pour ce métier.
+        recommandation = get_same_recommandation_if_exists(top_metier)
+    except Exception as e:
+        # on affiche la trace de l'exception dans les logs du serveur.
+        print(f"Erreur lors de la recherche dans le cache : {e}")
+        recommandation = None
 
     if recommandation is None:
 
-        # llm_response = appel_llm_pour_reponse_utilisateur(json_data, metiers)
+        # llm_response = f"# LLM response\n\nllm like response generated at time {datetime.datetime.now().isoformat()}"
+        llm_response = appel_llm_pour_reponse_utilisateur(json_data, metiers)
 
-        llm_response = "Voici une réponse de test du LLM. Cette partie n'est pas encore implémentée."
-
-        store_recommandation(
-            metier=top_metier.get("metier"),
-            score=top_metier.get("score"),
-            llm_text=llm_response,
-            competences=top_metier.get("compétences"),
-        )
+        try:
+            store_recommandation(
+                metier=top_metier.get("metier"),
+                score=top_metier.get("score"),
+                llm_text=llm_response,
+                competences=top_metier.get("compétences"),
+            )
+        except Exception as e:
+            print(f"Erreur lors de l'enregistrement dans le cache : {e}")
 
         return {
             "cached": False,
