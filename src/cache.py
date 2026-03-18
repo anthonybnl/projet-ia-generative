@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-DB_PATH  = Path.cwd() / "database" / "cache.db"
+DB_PATH = Path.cwd() / "database" / "cache.db"
 
 
 def _get_conn() -> sqlite3.Connection:
@@ -11,13 +11,14 @@ def _get_conn() -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
+
 def store_recommandation(
     metier: str,
     score: float,
     llm_text: str,
     competences: list[dict[str, Any]],
 ) -> int:
-    
+
     with _get_conn() as conn:
         cursor = conn.execute(
             """
@@ -40,12 +41,13 @@ def store_recommandation(
         )
         conn.commit()
 
-    return id_recommendation # type: ignore
+    return id_recommendation  # type: ignore
 
 
 # ---------------------------------------------------------------------------
 # SELECT
 # ---------------------------------------------------------------------------
+
 
 def get_recommandations(metier: str) -> list[dict[str, Any]]:
 
@@ -69,16 +71,18 @@ def get_recommandations(metier: str) -> list[dict[str, Any]]:
         rec_id = row["id"]
         if rec_id not in grouped:
             grouped[rec_id] = {
-                "id":          row["id"],
-                "metier":      row["metier"],
-                "score":       row["score"],
-                "llm_text":    row["llm_text"],
-                "created_at":  row["created_at"],
-                "competences": [],
+                "id": row["id"],
+                "metier": row["metier"],
+                "score": row["score"],
+                "llm_text": row["llm_text"],
+                "created_at": row["created_at"],
+                "compétences": [],
             }
-        grouped[rec_id]["competences"].append({
-            "id_competence":   row["id_competence"],
-            "score_competence": row["score_competence"],
-        })
+        grouped[rec_id]["compétences"].append(
+            {
+                "id_competence": row["id_competence"],
+                "score_competence": row["score_competence"],
+            }
+        )
 
     return list(grouped.values())

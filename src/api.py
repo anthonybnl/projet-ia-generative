@@ -8,6 +8,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from src.calcul_metier import agreger_score_competence_tout_ref, trouver_metier
 from src.nettoyage_texte import preprocess_it_text
+from src.cache import store_recommandation, get_recommandations
 from pathlib import Path
 import google.generativeai as genai
 
@@ -311,11 +312,94 @@ async def recommender_metier(json_data: dict = Body()):
     }
 
 
+def get_same_recommandation_if_exists(metier: dict):
+    titre_metier: str = metier.get("metier")
+    score = metier.get("score")
+    competences: list[dict] = metier.get("compétences")
+
+    recommandations = get_recommandations(titre_metier)
+
+    lookup_competences = {
+        c.get("id_competence"): c.get("score_competence") for c in competences
+    }
+    set_competences   = set(lookup_competences.keys())
+
+    candidates = []
+
+    for rec in recommandations:
+
+        # d'abord on regarde le score global, s'il est dans une fourchette proche (+- 0.15)
+        if abs(rec.get("score") - score) <= 0.15:
+
+            set_competences_cache = {c.get("id_competence") for c in rec.get("compétences")}
+            
+            # si des ensembles de compétences sont différents, next recommandation.
+            if set_competences_cache != set_competences:
+                continue
+
+            all_competences_match = True
+
+            # somme des erreurs quadratiques pour les compétences
+            sse_competences = 0.0
+
+            # pour chaque compétence on vérifie si +- 0.15 du score
+            for c in rec.get("compétences"):
+                id_competence = c.get("id_competence")
+                score_competence = c.get("score_competence")
+
+                err_competence = lookup_competences[id_competence] - score_competence
+                sse_competences += err_competence * err_competence
+                if abs(err_competence) > 0.15:
+                    all_competences_match = False
+                    break
+
+            if all_competences_match:
+                candidates.append((rec, sse_competences))
+
+    if candidates:
+        # recommandation avec la plus petite somme des erreurs quadratiques
+        best_candidate = min(candidates, key=lambda x: x[1])
+        best_candidate_metier = best_candidate[0]
+        best_candidate_sse = best_candidate[1]
+
+        rmse = (best_candidate_sse / len(best_candidate_metier.get("compétences")))**(0.5)
+        return best_candidate_metier['llm_text'], rmse
+
+    return None
+
+
 @app.post("/recommender_metier_llm_response/")
-async def recommender_metier_llm_response(json_data: dict = Body()) -> str:
+async def recommender_metier_llm_response(json_data: dict = Body()):
     questionnaire = json_data.get("questionnaire")
-    metiers = json_data.get("metiers")
+    metiers = json_data.get("metiers")[:3]
 
-    llm_response = appel_llm_pour_reponse_utilisateur(json_data, metiers)
+    top_metier = metiers[0]
 
-    return str(llm_response)
+    # on va vérifier si on a pas dans le cache une recommandation pour ce métier.
+    recommandation = get_same_recommandation_if_exists(top_metier)
+
+    if recommandation is None:
+
+        # llm_response = appel_llm_pour_reponse_utilisateur(json_data, metiers)
+
+        llm_response = "Voici une réponse de test du LLM. Cette partie n'est pas encore implémentée."
+
+        store_recommandation(
+            metier=top_metier.get("metier"),
+            score=top_metier.get("score"),
+            llm_text=llm_response,
+            competences=top_metier.get("compétences"),
+        )
+
+        return {
+            "cached": False,
+            "response": llm_response,
+        }
+
+    else:
+        llm_response_cache, rmse = recommandation
+        return {
+            "cached": True,
+            "response": llm_response_cache,
+            "difference": rmse,
+        }
