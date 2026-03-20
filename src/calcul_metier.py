@@ -62,9 +62,8 @@ def agreger_score_competence_tout_ref(
                 score_pour_cette_competence.append(item[competence])
 
         if score_pour_cette_competence:
-            score_par_competence[competence] = sum(score_pour_cette_competence) / len(
-                score_pour_cette_competence
-            )
+            score_par_competence[competence] = max(score_pour_cette_competence)
+
         else:
             score_par_competence[competence] = 0
 

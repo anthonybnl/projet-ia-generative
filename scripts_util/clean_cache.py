@@ -15,7 +15,7 @@ def _get_conn() -> sqlite3.Connection:
 def clear_cache():
     with _get_conn() as conn:
         conn.execute(
-            "DELETE FROM recommendation_competence where id_recommendation > 1;"
+            "DELETE FROM recommendation_competence;"
         )
-        conn.execute("DELETE FROM recommendation where id > 1;")
+        conn.execute("DELETE FROM recommendation;")
         conn.commit()

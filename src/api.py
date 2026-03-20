@@ -10,6 +10,7 @@ from sentence_transformers import SentenceTransformer
 from src.calcul_metier import agreger_score_competence_tout_ref, trouver_metier
 from src.nettoyage_texte import preprocess_it_text
 from src.cache import store_recommandation, get_recommandations
+from src.llm_augmentation import augmenter_textes_batch
 from pathlib import Path
 import google.generativeai as genai
 
@@ -50,6 +51,8 @@ df_metier = pd.read_csv(str(DATA_FOLDER / "cigref_metier_clean.csv"))
 # LLM
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
+FAKE_LLM_RESPONSE = os.environ.get("FAKE_LLM_RESPONSE", "0")
+FAKE_LLM_RESPONSE = bool(int(FAKE_LLM_RESPONSE))
 
 # Cache
 
@@ -59,7 +62,7 @@ DIFFERENCE_THRESHOLD_COMPETENCE = 0.25
 # api
 
 # TODO : à mettre dans un fichier de config ou une variable d'environnement
-SEUIL_SIMILARITE = 0.35
+SEUIL_SIMILARITE = 0.6
 
 
 @app.get("/data/")
@@ -187,47 +190,39 @@ def calculer_scores_competences(queries) -> list[dict[str, float]]:
     return all_results
 
 
-def generer_inputs_pour_moteur(json_data: dict):
+async def generer_inputs_pour_moteur(json_data: dict):
 
     inputs: list[dict[str, float]] = (
         []
     )  # liste de dictionnaires de la forme {id_competence: score}
 
-    # partie questions libre
+    # ------------- PARTIE QUESTIONS (Libres + Guidées) -------------
+    
+    all_text_queries = []
 
-    queries_questions_libres = []
-
-    questions_libres: dict = json_data.get("description_libre")
+    questions_libres: dict = json_data.get("description_libre", {})
     for key in questions_libres:
-        raw_text = questions_libres[key]
-        query = preprocess_it_text(raw_text)
-        if len(query) > 0:
-            queries_questions_libres.append(query)
-
-    # TODO : nettoyage des questions libres
-    embeddings_questions_libre = calculer_scores_competences(queries_questions_libres)
-
-    inputs.extend(embeddings_questions_libre)
-
-    # partie questions guidées
-
-    queries_questions_guidees = []
-
-    questions_guidees: dict = json_data.get("questions_guidees")
-
-    for key in questions_guidees:
-        not_concerned = questions_guidees[key].get("etat").lower()
-        if not_concerned == "oui" or not_concerned == "partiellement":
-            raw_text = questions_guidees[key].get("description")
+        raw_text = questions_libres.get(key)
+        if raw_text:
             query = preprocess_it_text(raw_text)
             if len(query) > 0:
-                queries_questions_guidees.append(query)
+                all_text_queries.append(query)
 
-    embeddings_questions_guidees = calculer_scores_competences(
-        queries_questions_guidees
-    )
+    questions_guidees: dict = json_data.get("questions_guidees", {})
+    for key in questions_guidees:
+        not_concerned = questions_guidees[key].get("etat", "").lower()
+        if not_concerned == "oui" or not_concerned == "partiellement":
+            raw_text = questions_guidees[key].get("description")
+            if raw_text:
+                query = preprocess_it_text(raw_text)
+                if len(query) > 0:
+                    all_text_queries.append(query)
 
-    inputs.extend(embeddings_questions_guidees)
+    # 1 SEUL APPEL API GEMINI POUR AUGMENTER LES TEXTES COURTS EN BATCH
+    all_text_queries = await augmenter_textes_batch(all_text_queries)
+
+    # 1 SEUL APPEL SBERT POUR CALCULER LES SCORES DE TOUS LES TEXTES EN BATCH
+    embeddings_all_texts = calculer_scores_competences(all_text_queries)
 
     # partie auto évaluation
 
@@ -254,6 +249,8 @@ def generer_inputs_pour_moteur(json_data: dict):
                             auto_eval[key].get(competence) / 5.0
                         ) * 0.8  # coefficient de 0.8 pour les auto évaluations
 
+    inputs: list[dict[str, float]] = []
+    inputs += embeddings_all_texts
     inputs.append(score_competence)
 
     return inputs
@@ -269,7 +266,7 @@ def appel_llm_pour_reponse_utilisateur(data_questionnaire, metiers):
     genai.configure(api_key=GEMINI_API_KEY)
 
     # 3. Lire le prompt système
-    with open("app_streamlit/system_prompt.txt", "r", encoding="utf-8") as file:
+    with open(str(Path.cwd() / "src" / "frontend" / "system_prompt.txt"), "r", encoding="utf-8") as file:
         system_prompt = file.read()
 
     # 4. Configurer le modèle Gemini 2.5 Flash
@@ -302,7 +299,7 @@ def appel_llm_pour_reponse_utilisateur(data_questionnaire, metiers):
 @app.post("/recommender_metier/")
 async def recommender_metier(json_data: dict = Body()):
 
-    inputs = generer_inputs_pour_moteur(json_data)
+    inputs = await generer_inputs_pour_moteur(json_data)
 
     final_score_competences = agreger_score_competence_tout_ref(
         df_metier,
@@ -314,7 +311,7 @@ async def recommender_metier(json_data: dict = Body()):
 
     return {
         "metiers": metiers,
-        # "compétences": final_score_competences,
+        "compétences": final_score_competences
     }
 
 
@@ -391,8 +388,10 @@ async def recommender_metier_llm_response(json_data: dict = Body()):
 
     if recommandation is None:
 
-        # llm_response = f"# LLM response\n\nllm like response generated at time {datetime.datetime.now().isoformat()}"
-        llm_response = appel_llm_pour_reponse_utilisateur(json_data, metiers)
+        if FAKE_LLM_RESPONSE:
+            llm_response = f"# LLM response\n\nFake LLM response generated at time {datetime.datetime.now().isoformat()}"
+        else:
+            llm_response = appel_llm_pour_reponse_utilisateur(json_data, metiers)
 
         try:
             store_recommandation(
