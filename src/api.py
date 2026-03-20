@@ -1,3 +1,5 @@
+import datetime
+import json
 import os
 import chromadb
 from dotenv import load_dotenv
@@ -7,7 +9,11 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from src.calcul_metier import agreger_score_competence_tout_ref, trouver_metier
 from src.nettoyage_texte import preprocess_it_text
+from src.cache import store_recommandation, get_recommandations
 from pathlib import Path
+import google.generativeai as genai
+
+load_dotenv()
 
 app = FastAPI(
     title="API Pour notre projet",
@@ -16,7 +22,6 @@ app = FastAPI(
 
 # chroma
 
-load_dotenv()
 CHROMA_HOST = os.environ.get("CHROMA_HOST")
 CHROMA_PORT = os.environ.get("CHROMA_PORT")
 chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
@@ -41,6 +46,15 @@ DATA_FOLDER = Path.cwd() / "data"
 
 df_competences = pd.read_csv(str(DATA_FOLDER / "cigref_competence_clean.csv"))
 df_metier = pd.read_csv(str(DATA_FOLDER / "cigref_metier_clean.csv"))
+
+# LLM
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", None)
+
+# Cache
+
+DIFFERENCE_THRESHOLD_METIER = 0.15
+DIFFERENCE_THRESHOLD_COMPETENCE = 0.25
 
 # api
 
@@ -114,14 +128,14 @@ async def test_sbert(
     return array_result
 
 
-@app.get("/calculer_score_metier/")
+@app.get("/test_calcul_score_metier/")
 async def calculer_score_metier(
     query1: str = Query("exploration des données"),
-    query2: str = Query(""),
+    # query2: str = Query(""),
 ):
 
     all_queries = []
-    for query in [query1, query2]:
+    for query in [query1]:
         query = query.strip()
         if len(query) > 0:
             all_queries.append(query)
@@ -173,8 +187,11 @@ def calculer_scores_competences(queries) -> list[dict[str, float]]:
     return all_results
 
 
-@app.post("/recommender_metier/")
-async def recommender_metier(json_data: dict = Body()):
+def generer_inputs_pour_moteur(json_data: dict):
+
+    inputs: list[dict[str, float]] = (
+        []
+    )  # liste de dictionnaires de la forme {id_competence: score}
 
     # partie questions libre
 
@@ -190,6 +207,8 @@ async def recommender_metier(json_data: dict = Body()):
     # TODO : nettoyage des questions libres
     embeddings_questions_libre = calculer_scores_competences(queries_questions_libres)
 
+    inputs.extend(embeddings_questions_libre)
+
     # partie questions guidées
 
     queries_questions_guidees = []
@@ -204,7 +223,11 @@ async def recommender_metier(json_data: dict = Body()):
             if len(query) > 0:
                 queries_questions_guidees.append(query)
 
-    embeddings_questions_guidees = calculer_scores_competences(queries_questions_guidees)
+    embeddings_questions_guidees = calculer_scores_competences(
+        queries_questions_guidees
+    )
+
+    inputs.extend(embeddings_questions_guidees)
 
     # partie auto évaluation
 
@@ -229,12 +252,57 @@ async def recommender_metier(json_data: dict = Body()):
                         # TODO : fichier de config pour le 0.8
                         score_competence[competence] = (
                             auto_eval[key].get(competence) / 5.0
-                        ) * 0.6  # coefficient de 0.8 pour les auto évaluations
+                        ) * 0.8  # coefficient de 0.8 pour les auto évaluations
 
-    inputs: list[dict[str, float]] = []
-    inputs += embeddings_questions_libre
-    inputs += embeddings_questions_guidees
     inputs.append(score_competence)
+
+    return inputs
+
+
+def appel_llm_pour_reponse_utilisateur(data_questionnaire, metiers):
+    if not GEMINI_API_KEY:
+        raise Error(
+            "Erreur de configuration : Clé API Gemini introuvable sur le serveur."
+        )
+
+    # 2. Configurer Gemini avec la clé API
+    genai.configure(api_key=GEMINI_API_KEY)
+
+    # 3. Lire le prompt système
+    with open("app_streamlit/system_prompt.txt", "r", encoding="utf-8") as file:
+        system_prompt = file.read()
+
+    # 4. Configurer le modèle Gemini 2.5 Flash
+    model = genai.GenerativeModel(
+        model_name="gemini-2.5-flash", system_instruction=system_prompt
+    )
+
+    # 5. Préparer le contexte utilisateur
+    user_data_str = json.dumps(data_questionnaire, ensure_ascii=False, indent=2)
+
+    api_results_str = json.dumps(metiers, ensure_ascii=False, indent=2)
+
+    prompt_utilisateur = f"""
+    Voici le profil renseigné par l'utilisateur :
+    {user_data_str}
+
+    Voici les résultats de notre moteur de recommandation (métiers et scores) :
+    {api_results_str}
+
+    Merci de rédiger la restitution en te basant sur ces informations.
+                    """
+
+    response_stream = model.generate_content(prompt_utilisateur)
+
+    response_texte = response_stream.text
+
+    return str(response_texte)
+
+
+@app.post("/recommender_metier/")
+async def recommender_metier(json_data: dict = Body()):
+
+    inputs = generer_inputs_pour_moteur(json_data)
 
     final_score_competences = agreger_score_competence_tout_ref(
         df_metier,
@@ -246,5 +314,105 @@ async def recommender_metier(json_data: dict = Body()):
 
     return {
         "metiers": metiers,
-        "compétences": final_score_competences,
+        # "compétences": final_score_competences,
     }
+
+
+def get_same_recommandation_if_exists(metier: dict):
+    titre_metier: str = metier.get("metier")
+    score = metier.get("score")
+    competences: list[dict] = metier.get("compétences")
+
+    recommandations = get_recommandations(titre_metier)
+
+    lookup_competences = {
+        c.get("id_competence"): c.get("score_competence") for c in competences
+    }
+    set_competences   = set(lookup_competences.keys())
+
+    candidates = []
+
+    for rec in recommandations:
+
+        # d'abord on regarde le score global, s'il est dans une fourchette proche (+- DIFFERENCE_THRESHOLD_METIER)
+        if abs(rec.get("score") - score) <= DIFFERENCE_THRESHOLD_METIER:
+
+            set_competences_cache = {c.get("id_competence") for c in rec.get("compétences")}
+            
+            # si des ensembles de compétences sont différents, next recommandation.
+            if set_competences_cache != set_competences:
+                continue
+
+            all_competences_match = True
+
+            # somme des erreurs quadratiques pour les compétences
+            sse_competences = 0.0
+
+            # pour chaque compétence on vérifie si +- DIFFERENCE_THRESHOLD_COMPETENCE du score
+            for c in rec.get("compétences"):
+                id_competence = c.get("id_competence")
+                score_competence = c.get("score_competence")
+
+                err_competence = lookup_competences[id_competence] - score_competence
+                sse_competences += err_competence * err_competence
+                if abs(err_competence) > DIFFERENCE_THRESHOLD_COMPETENCE:
+                    all_competences_match = False
+                    break
+
+            if all_competences_match:
+                candidates.append((rec, sse_competences))
+
+    if candidates:
+        # recommandation avec la plus petite somme des erreurs quadratiques
+        best_candidate = min(candidates, key=lambda x: x[1])
+        best_candidate_metier = best_candidate[0]
+        best_candidate_sse = best_candidate[1]
+
+        rmse = (best_candidate_sse / len(best_candidate_metier.get("compétences")))**(0.5)
+        return best_candidate_metier['llm_text'], rmse
+
+    return None
+
+
+@app.post("/recommender_metier_llm_response/")
+async def recommender_metier_llm_response(json_data: dict = Body()):
+    questionnaire = json_data.get("questionnaire")
+    metiers = json_data.get("metiers")[:3]
+
+    top_metier = metiers[0]
+
+    try:
+        # on va vérifier si on a pas dans le cache une recommandation pour ce métier.
+        recommandation = get_same_recommandation_if_exists(top_metier)
+    except Exception as e:
+        # on affiche la trace de l'exception dans les logs du serveur.
+        print(f"Erreur lors de la recherche dans le cache : {e}")
+        recommandation = None
+
+    if recommandation is None:
+
+        # llm_response = f"# LLM response\n\nllm like response generated at time {datetime.datetime.now().isoformat()}"
+        llm_response = appel_llm_pour_reponse_utilisateur(json_data, metiers)
+
+        try:
+            store_recommandation(
+                metier=top_metier.get("metier"),
+                score=top_metier.get("score"),
+                llm_text=llm_response,
+                competences=top_metier.get("compétences"),
+            )
+        except Exception as e:
+            print(f"Erreur lors de l'enregistrement dans le cache : {e}")
+
+        return {
+            "cached": False,
+            "response": llm_response,
+        }
+
+    else:
+        llm_response_cache, rmse = recommandation
+        return {
+            "cached": True,
+            "response": llm_response_cache,
+            "difference": rmse,
+        }
