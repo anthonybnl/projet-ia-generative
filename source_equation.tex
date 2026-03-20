@@ -1,0 +1,40 @@
+\documentclass[11pt]{article}
+
+% Encodage et langue
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% Maths
+\usepackage{amsmath, amssymb}
+
+\title{Calcul de scores}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Calcul du score}
+
+On calcule la moyenne des scores de chaque compétence pour chaque métier en utilisant la formule suivante :
+
+\[
+SC_i = \frac{\sum_{j} SC_j}{N} \quad \text{( ou SC_j n'est pas nul)}
+\]
+
+Avec $SC_i$ le score de la compétence $i$ et $Niveau_i$ le niveau de maîtrise de la compétence $i$, nous avons calculé le score global de chaque métier en utilisant la formule suivante :
+
+\[
+Metier = \frac{\sum_{i} Niveau_i \cdot SC_i}{\sum_{i} Niveau_i}
+\]
+
+Également, le score pour chaque bloc est :
+
+\[
+Bloc = \frac{\sum_{i} Niveau_i \cdot SC_i}{\sum_{i} Niveau_i}
+\quad \text{pour les compétences du bloc}
+\]
+
+\end{document}

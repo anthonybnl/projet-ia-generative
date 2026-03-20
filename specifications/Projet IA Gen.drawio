@@ -1,6 +1,6 @@
-<mxfile host="65bd71144e">
+<mxfile host="65bd71144e" scale="1.5" border="0">
     <diagram name="Page-1" id="5G_jHLi90DZ9EL8zw4AZ">
-        <mxGraphModel dx="2489" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+        <mxGraphModel dx="2599" dy="1143" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#FFFFFF" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -88,7 +88,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="hA2ITbfias4bhCYic_YJ-22" value="&lt;div&gt;similarity&lt;/div&gt;&lt;div&gt;(ChromaDB query)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                <mxCell id="hA2ITbfias4bhCYic_YJ-22" value="&lt;div&gt;similarity&lt;/div&gt;&lt;div&gt;(ChromaDB query)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
                     <mxGeometry x="-520" y="220" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="hA2ITbfias4bhCYic_YJ-25" target="hA2ITbfias4bhCYic_YJ-27" edge="1">
@@ -99,7 +99,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="hA2ITbfias4bhCYic_YJ-25" value="calcul score numérique" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                <mxCell id="hA2ITbfias4bhCYic_YJ-25" value="calcul score numérique" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
                     <mxGeometry x="-690" y="220" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="hA2ITbfias4bhCYic_YJ-27" target="hA2ITbfias4bhCYic_YJ-37" edge="1">
@@ -111,10 +111,10 @@
                 <mxCell id="hA2ITbfias4bhCYic_YJ-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="hA2ITbfias4bhCYic_YJ-27" target="hA2ITbfias4bhCYic_YJ-40" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="hA2ITbfias4bhCYic_YJ-27" value="&lt;div&gt;calcul score par&lt;/div&gt;&lt;div&gt;métier.&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Pour chaque métier :&lt;/div&gt;&lt;div&gt;- son score&lt;/div&gt;&lt;div&gt;- quelles compétences sont acquises&lt;/div&gt;&lt;div&gt;- quelles compétences sont manquantes.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                <mxCell id="hA2ITbfias4bhCYic_YJ-27" value="&lt;div&gt;calcul score par&lt;/div&gt;&lt;div&gt;métier.&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Pour chaque métier :&lt;/div&gt;&lt;div&gt;- son score&lt;/div&gt;&lt;div&gt;- quelles compétences sont acquises&lt;/div&gt;&lt;div&gt;- quelles compétences sont manquantes.&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
                     <mxGeometry x="-350" y="140" width="210" height="200" as="geometry"/>
                 </mxCell>
-                <mxCell id="hA2ITbfias4bhCYic_YJ-32" value="LLM" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+                <mxCell id="hA2ITbfias4bhCYic_YJ-32" value="LLM" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#bac8d3;strokeColor=#23445d;" parent="1" vertex="1">
                     <mxGeometry x="-400" y="560" width="310" height="230" as="geometry"/>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-35" value="&lt;div&gt;Plan de progression&lt;/div&gt;&lt;div&gt;1 seul métier&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -123,7 +123,7 @@
                 <mxCell id="hA2ITbfias4bhCYic_YJ-36" value="Synthèse de profil" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="-220" y="710" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="hA2ITbfias4bhCYic_YJ-37" value="&lt;b&gt;Dataviz&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+                <mxCell id="hA2ITbfias4bhCYic_YJ-37" value="&lt;b&gt;Dataviz&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#fad9d5;strokeColor=#ae4132;" parent="1" vertex="1">
                     <mxGeometry y="110" width="240" height="310" as="geometry"/>
                 </mxCell>
                 <mxCell id="hA2ITbfias4bhCYic_YJ-34" value="&lt;div&gt;3 x métier&lt;/div&gt;&lt;div&gt;+ compétences acquises&lt;/div&gt;&lt;div&gt;+ compétences manquantes&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;rounded=0;" parent="1" vertex="1">
@@ -143,6 +143,17 @@
                 </mxCell>
                 <mxCell id="3" value="https://docs.trychroma.com/docs/embeddings/embedding-functions#custom-embedding-functions" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="-1020" y="740" width="540" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;endFill=0;" parent="1" source="5" target="hA2ITbfias4bhCYic_YJ-4" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="-820" y="120"/>
+                            <mxPoint x="-820" y="120"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="5" value="LLM augmentation entrée (si besoin)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" parent="1" vertex="1">
+                    <mxGeometry x="-880" y="25" width="120" height="60" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

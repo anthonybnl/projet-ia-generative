@@ -40,6 +40,9 @@ async def augmenter_textes_batch(textes: list[str]) -> list[str]:
         print("⚠️ Pas de modèle Gemini disponible pour le batch")
         return textes
 
+    print("===== augmentation LLM textes courts =====")
+    print(json.dumps(textes_courts, ensure_ascii=False, indent=2))
+
     # 2. Préparer le prompt JSON
     prompt = f"""
 Tu es un expert en systèmes d'information spécialisé en traitement du langage naturel.
